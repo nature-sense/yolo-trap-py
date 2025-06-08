@@ -12,7 +12,7 @@ from bless import (
     GATTAttributePermissions,
 )
 
-from src.bluetooth.messages import SessionReference, ImageReference, ImageSequenceHeader, ImageSequenceSegment, \
+from bluetooth.messages import SessionReference, ImageReference, ImageSequenceHeader, ImageSequenceSegment, \
     SessionDetails
 
 YOLO_MODEL = "/home/aidev/yolo-trap-py/models/best.pt"

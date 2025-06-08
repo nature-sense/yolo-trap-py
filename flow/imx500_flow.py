@@ -8,7 +8,7 @@ from picamera2.devices.imx500 import (NetworkIntrinsics)
 from deep_sort_realtime.deepsort_tracker import DeepSort
 from streamerate import stream
 
-from src.flow.detect_flow import DetectFlow
+from flow.detect_flow import DetectFlow
 
 last_detections = []
 

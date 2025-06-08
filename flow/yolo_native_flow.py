@@ -6,9 +6,7 @@ import numpy as np
 from picamera2 import Picamera2, MappedArray
 from ultralytics import YOLO
 
-from src.flow.detect_flow import DetectFlow
-#from src.session.session_manager import SessionManager
-
+from flow.detect_flow import DetectFlow
 
 class YoloNativeFlow(DetectFlow):
 

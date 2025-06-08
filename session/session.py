@@ -3,11 +3,9 @@ import os
 import cv2
 
 from datetime import datetime
-
-from pandas import DataFrame
 from strong_typing.serialization import object_to_json
 
-from src.session.image_metadata import ImageMetadata
+from session.image_metadata import ImageMetadata
 
 class FixedSizeMap:
     def __init__(self, capacity):

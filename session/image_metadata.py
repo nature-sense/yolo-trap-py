@@ -1,7 +1,4 @@
 from dataclasses import dataclass
-from datetime import datetime
-
-from strong_typing.serialization import object_to_json
 
 @dataclass
 class ImageMetadata:

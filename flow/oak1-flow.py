@@ -3,7 +3,6 @@ from pathlib import Path
 
 import cv2
 import depthai as dai
-import numpy as np
 import time
 
 pipeline = dai.Pipeline()

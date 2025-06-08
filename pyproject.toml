@@ -1,0 +1,21 @@
+[project]
+name = "yolo-trap-py"
+version = "0.0.1"
+description = ""
+authors = [
+    {name = "steve",email = "steve@naturesense.io"}
+]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+]
+
+
+[build-system]
+requires = [
+    "poetry-core>=2.0.0,<3.0.0",
+    "asyncio>=3.4.3,<4.0.0",
+    "bless>=0.2.6,<1.0.0",
+    "strong-typing>=0.3.1,<1.0.0"
+]
+build-backend = "poetry.core.masonry.api"

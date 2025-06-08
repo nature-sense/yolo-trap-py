@@ -1,5 +1,5 @@
-from  src.bluetooth import messages_pb2
-from src.session.image_metadata import ImageMetadata
+from bluetooth import messages_pb2
+from session.image_metadata import ImageMetadata
 
 
 class ImageReference :

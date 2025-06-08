@@ -3,8 +3,8 @@ import os
 
 from strong_typing.serialization import json_to_object
 
-from src.session.image_metadata import ImageMetadata
-from src.session.session import Session
+from session.image_metadata import ImageMetadata
+from session.session import Session
 
 
 class SessionManager:

@@ -1,6 +1,5 @@
 import os
 from abc import ABC, abstractmethod
-#from session import Session
 
 class DetectFlow(ABC):
 
