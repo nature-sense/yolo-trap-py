@@ -9,7 +9,7 @@ YOLO_MODEL = "/home/aidev/yolo-trap-py/models/best.pt"
 IMX_MODEL = "/home/aidev/yolo-trap-py/models/network.rpk"
 NCNN_MODEL = "/home/aidev/yolo-trap-py/models/best_ncnn_model"
 
-SESSIONS_DIRECTORY = "../sessions"
+SESSIONS_DIRECTORY = "./sessions"
 MAX_TRACKING = 10
 MAX_SESSIONS = 2
 CACHE_SIZE = 20
