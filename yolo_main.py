@@ -4,9 +4,9 @@ from flow.yolo_native_flow import YoloNativeFlow
 from control.control_service import ControlService
 import picologging as logging
 
-YOLO_MODEL = "/home/aidev/yolo-trap-py/models/best.pt"
-IMX_MODEL = "/home/aidev/yolo-trap-py/models/network.rpk"
-NCNN_MODEL = "/home/aidev/yolo-trap-py/models/best_ncnn_model"
+#YOLO_MODEL = "/home/aidev/yolo-trap-py/models/best.pt"
+#IMX_MODEL = "/home/aidev/yolo-trap-py/models/network.rpk"
+NCNN_MODEL = "./models/best_ncnn_model"
 
 SESSIONS_DIRECTORY = "./sessions"
 MAX_TRACKING = 10
