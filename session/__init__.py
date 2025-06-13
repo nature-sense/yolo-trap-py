@@ -1,1 +1,1 @@
-__all__ = ["session_manager", "session", 'image_metadata']
+__all__ = ["session_service.py", "session_client", 'detection_metadata.py', 'ipc']

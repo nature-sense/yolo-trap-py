@@ -8,10 +8,14 @@ from ultralytics import YOLO
 
 from flow.detect_flow import DetectFlow
 
+#YOLO_MODEL = "/home/aidev/yolo-trap-py/models/best.pt"
+#MAIN_SIZE = (2028, 1520)
+#LORES_SIZE = (320,320)
+
 class YoloNativeFlow(DetectFlow):
 
-    def __init__(self, max_tracking, min_score, sessions_directory, lores_size, main_size, model, session_manager):
-        super().__init__(max_tracking, min_score, sessions_directory, lores_size, main_size, model, session_manager)
+    def __init__(self, min_score, lores_size, main_size, model, max_tracking):
+        super().__init__(min_score, lores_size, main_size, model, max_tracking)
 
         #os.environ['LIBCAMERA_LOG_LEVELS'] = '4'
         self.picam2 = Picamera2()
@@ -46,21 +50,16 @@ class YoloNativeFlow(DetectFlow):
 
                     #current_datetime = datetime.now()
                     # current_timestamp_ms = int(current_datetime.timestamp() * 1000)
+                    try :
+                        boxes = results[0].boxes.xyxy.cpu().numpy().astype(np.int32)
+                        track_ids = [tid.item() for tid in results[0].boxes.id.int().cpu().numpy()]
+                        scores = [s.item() for s in results[0].boxes.conf.numpy()]
+                        classes = [c.item() for c in results[0].boxes.cls.numpy().astype(np.int32)]
 
-                    boxes = results[0].boxes.xyxy.cpu().numpy().astype(np.int32)
-                    track_ids = [tid.item() for tid in results[0].boxes.id.int().cpu().numpy()]
-                    scores = [s.item() for s in results[0].boxes.conf.numpy()]
-                    classes = [c.item() for c in results[0].boxes.cls.numpy().astype(np.int32)]
+                        annotated_frame = results[0].plot()
+                        cv2.imwrite("img.jpg", annotated_frame)
 
-                    annotated_frame = results[0].plot()
-                    cv2.imwrite("img.jpg", annotated_frame)
-
-                    self.save_detections(m, zip(boxes, track_ids, scores, classes))
+                        self.save_detections(m, zip(boxes, track_ids, scores, classes))
+                    except AttributeError :
+                        print("ERROR IN TENSOR")
                     request.release()
-
-                    # cv2.imshow("Camera", annotated_frame)
-
-                    # results = ncnn_model.track(source = m.array, stream=True, persist=True)
-                    # for r in results:
-                #    print(r.boxes)
-

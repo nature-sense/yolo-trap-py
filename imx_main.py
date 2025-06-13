@@ -2,7 +2,7 @@
 import asyncio
 
 from flow.imx500_flow import Imx500Flow
-from bluetooth import BluetoothControl
+from control import BluetoothControl
 
 YOLO_MODEL = "/home/aidev/yolo-trap-py/models/best.pt"
 IMX_MODEL = "/home/aidev/yolo-trap-py/models/network.rpk"

@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 
 @dataclass
-class ImageMetadata:
+class DetectionMetadata:
     session: str
-    image: int
+    detection: int
     created: int
     updated: int
     score: float

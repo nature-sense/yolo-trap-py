@@ -1,17 +1,27 @@
 import os
 from abc import ABC, abstractmethod
+from datetime import datetime
+
+import cv2
+
+from session.detection_metadata import DetectionMetadata
+from session.session_client import SessionClient
+
 
 class DetectFlow(ABC):
 
-    def __init__(self, max_tracking, min_score, sessions_directory, lores_size, main_size, model, session_manager):
+    def __init__(self, min_score, lores_size, main_size, model,max_tracking):
         os.environ['LIBCAMERA_LOG_LEVELS'] = '4'
-        self.session_manager = session_manager
 
-        self.session = session_manager.new_session()
+        #self.session = session_manager.new_session()
         self.min_score = min_score
         self.lores_size = lores_size
         self.main_size = main_size
         self.model = model
+
+        now = datetime.now()
+        self.current_session = now.strftime("%Y%d%m%H%M%S")
+        self.session_client = SessionClient(max_tracking, self.current_session)
 
     @abstractmethod
     def flow_task(self):
@@ -26,22 +36,37 @@ class DetectFlow(ABC):
             img_width = x1-x0
             img_height = y1-y0
 
-            # print("timestamp", current_timestamp_ms)
-            # print("box", box)
-            # print("track-id", track_id)
-            # print("score", score)
-            # print("class", clazz)
+            metadata = self.session_client.get_detection_metadata(track_id)
+            current_datetime = datetime.now()
+            current_timestamp_ms = int(current_datetime.timestamp() * 1000)
 
-            save_image = self.session.set_entry(track_id, score, clazz, img_width, img_height)
-            self.session.save_metadata(track_id)
+            if metadata is None:
+                current_metadata = DetectionMetadata(
+                    self.current_session,
+                    track_id,
+                    current_timestamp_ms,
+                    current_timestamp_ms,
+                    score,
+                    clazz,
+                    img_width,
+                    img_height
+                )
+                crop = self.to_jpeg(frame.array[y0:y1, x0:x1])
+                self.session_client.new_detection(current_metadata, crop)
 
-            if save_image:
-                scaled_box = self.scale(box)
-                print("scaled-box", scaled_box)
-                x0, y0, x1, y1 = scaled_box
-                crop = frame.array[y0:y1, x0:x1]
-                self.session.save_image(track_id, crop)
-                #cv2.imwrite(f"crop{track_id}.jpg", crop)
+            else :
+                if score > metadata.score :
+                    metadata.score = score
+                    metadata.updated = current_timestamp_ms
+                    metadata.width = img_width
+                    metadata.height = img_height
+
+                    crop = self.to_jpeg(frame.array[y0:y1, x0:x1])
+                    self.session_client.update_detection(metadata, crop)
+
+                else:
+                    metadata.updated = current_timestamp_ms
+                    self.session_client.update_detection_meta(metadata)
 
 
     def scale(self, rect):
@@ -51,3 +76,11 @@ class DetectFlow(ABC):
         x_scale = d_w / s_w
         y_scale = d_h / s_h
         return int(x0 * x_scale), int(y0 * y_scale), int(x1 * x_scale), int(y1 * y_scale)
+
+    def to_jpeg(self, img):
+        is_success, im_buf = cv2.imencode(".jpg", img)
+        if is_success:
+            return im_buf.tobytes()
+        else:
+            return None
+

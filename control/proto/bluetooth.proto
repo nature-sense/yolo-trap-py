@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package bluetooth;
+
+message NewSessionMsg {
+    string session = 1;
+}
+
+message SessionDeletedMsg {
+    string session = 1;
+}
+
+message SessionDetailsMsg {
+    string session = 1;
+    int32 detections = 2;
+}
+
+message SessionMsg {
+    oneof inner {
+        NewSessionMsg new_session = 1;
+        SessionDeletedMsg del_session = 2;
+        SessionDetailsMsg sess_details = 3;
+    }
+}
+
+message  ImageMsg {
+    oneof inner {
+        ImageHeaderMsg header = 1;
+        ImageSegmentMsg segment = 2;
+    }
+}
+
+message ImageHeaderMsg {
+    int32 width = 1;
+    int32 height = 2;;
+    int32 segments = 3;
+}
+
+message ImageSegmentMsg {
+    int32 segment = 1;
+    bytes data = 2;
+ }
+
+message DetectionReferenceMsg {
+    string session = 1;
+    string detection = 2;
+}
+
+message DetectionMetadataMsg {
+    string session = 1;
+    int32 detection = 2;
+    int64 created = 3;
+    int64 updated = 4;
+    float score = 5;
+    int32 clazz = 6;
+    int32 width = 7;
+    int32 height = 8;
+}

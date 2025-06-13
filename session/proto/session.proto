@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package session;
+
+message SessionMsg {
+     oneof inner {
+         NewSessionMsg new_session = 1;
+         NewDetectionMsg new_detection = 2;
+         UpdateDetectionMetaMsg  update_detection_meta = 3;
+         UpdateDetectionMsg update_detection = 4;
+     }
+}
+
+message NewSessionMsg {
+    string session = 1;
+}
+
+message NewDetectionMsg {
+    int32 detection = 1;
+    int64 created = 2;
+    float score = 3;
+    int32 clazz = 4;
+    int32 width = 5;
+    int32 height = 6;
+    bytes img_data = 7;
+}
+
+message UpdateDetectionMetaMsg {
+    int64 updated = 1;
+}
+
+message UpdateDetectionMsg {
+    int64 updated = 1;
+    float score = 2;
+    int32 width = 3;
+    int32 height = 4;
+    bytes img_data = 5;
+}
+
+
+
