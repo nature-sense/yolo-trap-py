@@ -14,6 +14,15 @@ class SessionMsgType(Enum) :
     SESSION_DETAILS = 3,
     UNKNOWN = 4
 
+class FrameMsgType(Enum) :
+    FRAME_HEADER = 1
+    FRAME_SEGMENT = 2
+    UNKNOWN = 3
+
+
+# ========================================================================
+#                    Session Messages
+# ========================================================================
 class SessionMessage :
     def from_proto(proto):
         msg = bluetooth_pb2.SessionMsg()
@@ -78,21 +87,14 @@ class SessionDetailsMessage :
     def from_proto(msg):
         return SessionDetailsMessage(msg.session, msg.images)
 
-class ImageMessage :
-    def from_proto(proto):
-        msg = bluetooth_pb2.ImageMsg()
-        msg.ParseFromString(proto)
-        type = msg.WhichOneof("inner")
-
-        if type == "header":
-            return ImageMsgType.IMAGE_HEADER, ImageHeaderMessage.from_proto(msg.header)
-        elif type == "segment":
-            return ImageMsgType.IMAGE_SEGMENT,  NewSessionMessage.from_proto(msg.segment)
-        else:
-            return ImageMsgType.IMAGE_SEGMENT, None
-
+# ========================================================================
+#                    Image Messages -> send only
+# ========================================================================
 class ImageHeaderMessage :
-    def __init__(self, width, height, segments):
+    def __init__(self, session, detection, width, height, segments):
+
+        self.session = session
+        self.detection  =  detection
         self.width = width
         self.height = height
         self.segments = segments
@@ -100,50 +102,60 @@ class ImageHeaderMessage :
     def to_proto(self):
         img_msg = bluetooth_pb2.ImageMsg()
         header_msg = bluetooth_pb2.ImageHeaderMsg()
+        header_msg.session = self.session
+        header_msg.detection = self.detection
         header_msg.width = self.width
         header_msg.height = self.height
         header_msg.segments = self.segments
-        img_msg.update_detection_meta.CopyFrom(header_msg)
+        img_msg.header.CopyFrom(header_msg)
         return img_msg.SerializeToString()
 
-    @staticmethod
-    def from_proto(msg):
-        return ImageHeaderMessage(msg.width, msg.height, msg.segments)
-
-
 class ImageSegmentMessage:
-    def __init__(self, segment, data):
+    def __init__(self, session, detection, segment, data):
+        self.session = session
+        self.detection = detection
         self.segment = segment
         self.data = data
 
     def to_proto(self):
         img_msg = bluetooth_pb2.ImageMsg()
         segment_msg = bluetooth_pb2.ImageSegmentMsg()
+        segment_msg.session = self.session
+        segment_msg.detection = self.detection
         segment_msg.segment = self.segment
         segment_msg.data = self.data
-        img_msg.update_detection_meta.CopyFrom(segment_msg)
+        img_msg.segment.CopyFrom(segment_msg)
         return img_msg.SerializeToString()
 
+# ========================================================================
+#                    Detection Messages
+# ========================================================================
+class DetectionsForSessionMessage:
+    def __init__(self, session) :
+        self.session = session
+
     @staticmethod
-    def from_proto(msg):
-        return ImageSegmentMessage(msg.segment, msg.data)
+    def from_proto(proto):
+        msg = bluetooth_pb2.DetectionsForSessionMsg()
+        msg.ParseFromString(proto)
+        return DetectionsForSessionMessage(msg.session,)
 
 class DetectionReferenceMessage :
-    def __init__(self, session, image) :
+    def __init__(self, session, detection) :
         self.session = session
-        self.image = image
+        self.detection = detection
 
     def to_proto(self) :
         msg = bluetooth_pb2.DetectionReferenceMsg()
         msg.session = self.session
-        msg.image = self.image
+        msg.detection = self.detection
         return msg.SerializeToString()
 
     @staticmethod
     def from_proto(proto):
         msg = bluetooth_pb2.DetectionReferenceMsg()
         msg.ParseFromString(proto)
-        return DetectionReferenceMessage(msg.session, msg.image)
+        return DetectionReferenceMessage(msg.session, msg.detection)
 
 class DetectionMetadataMessage:
     def __init__(self,  session, detection, created, updated, score, clazz, width, height) :
@@ -155,6 +167,19 @@ class DetectionMetadataMessage:
         self.clazz = clazz
         self.width = width
         self.height = height
+
+    @staticmethod
+    def from_metadata(metadata):
+        return DetectionMetadataMessage(
+            metadata.session,
+            metadata.detection,
+            metadata.created,
+            metadata.updated,
+            metadata.score,
+            metadata.clazz,
+            metadata.width,
+            metadata.height
+        )
 
     def to_proto(self):
         msg = bluetooth_pb2.DetectionMetadataMsg()
@@ -184,4 +209,39 @@ class DetectionMetadataMessage:
             msg.height
         )
 
+# ========================================================================
+#                        Frame Messages - send only
+# ========================================================================
+class FrameHeaderMessage :
+    def __init__(self, timestamp, width, height, segments):
+        self.timestamp = timestamp
+        self.width = width
+        self.height = height
+        self.segments = segments
+
+    def to_proto(self):
+        img_msg = bluetooth_pb2.FrameMsg()
+        header_msg = bluetooth_pb2.FrameHeaderMsg()
+        header_msg.timestamp = self.timestamp
+        header_msg.width = self.width
+        header_msg.height = self.height
+        header_msg.segments = self.segments
+        img_msg.header.CopyFrom(header_msg)
+        return img_msg.SerializeToString()
+
+
+class FrameSegmentMessage:
+    def __init__(self, timestamp, segment, data):
+        self.timestamp = timestamp
+        self.segment = segment
+        self.data = data
+
+    def to_proto(self):
+        img_msg = bluetooth_pb2.FrameMsg()
+        segment_msg = bluetooth_pb2.FrameSegmentMsg()
+        segment_msg.timestamp = self.timestamp
+        segment_msg.segment = self.segment
+        segment_msg.data = self.data
+        img_msg.segment.CopyFrom(segment_msg)
+        return img_msg.SerializeToString()
 

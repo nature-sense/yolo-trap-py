@@ -1,0 +1,11 @@
+from control.bluetooth_messages import DetectionMetadataMessage
+from control.notifiers.notifier import Notifier
+from control.uuids import DETECTION_NOTIF_UUID, SERVICE_UUID
+
+class DetectionNotifier(Notifier) :
+    def __init__(self, bluetooth_server,):
+        super().__init__(bluetooth_server,  SERVICE_UUID, DETECTION_NOTIF_UUID)
+
+    async def notify_detection_meta(self, detection_meta):
+        msg = DetectionMetadataMessage.from_metadata(detection_meta).to_proto()
+        await self.notif_queue.put(msg)

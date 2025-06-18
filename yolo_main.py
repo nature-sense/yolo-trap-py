@@ -4,6 +4,8 @@ from flow.yolo_native_flow import YoloNativeFlow
 from control.control_service import ControlService
 import picologging as logging
 
+from flow.yolo_preview_flow import YoloPreviewFlow
+
 #YOLO_MODEL = "/home/aidev/yolo-trap-py/models/best.pt"
 #IMX_MODEL = "/home/aidev/yolo-trap-py/models/network.rpk"
 NCNN_MODEL = "./models/best_ncnn_model"
@@ -15,6 +17,7 @@ MIN_SCORE = 0.5
 
 MAIN_SIZE = (2028, 1520)
 LORES_SIZE = (320,320)
+PREVIEW_SIZE = (640,480)
 
 def run_detection() :
     yolo_detect_flow = YoloNativeFlow(
@@ -26,6 +29,12 @@ def run_detection() :
     )
     yolo_detect_flow.flow_task()
 
+def run_preview() :
+    yolo_preview_flow = YoloPreviewFlow(
+        main_size=PREVIEW_SIZE,
+    )
+    yolo_preview_flow.stream_task()
+
 async def main() :
     logging.basicConfig()
     logger = logging.getLogger()
@@ -33,7 +42,7 @@ async def main() :
     logger.info("Yolo Trap starting")
     loop = asyncio.get_event_loop()
 
-    control = ControlService(run_detection)
+    control = ControlService(run_detection, run_preview)
     await control.run(loop)
 
 if __name__ == "__main__":

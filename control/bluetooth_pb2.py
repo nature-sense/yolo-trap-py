@@ -13,29 +13,37 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x62luetooth.proto\x12\tbluetooth\" \n\rNewSessionMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\"$\n\x11SessionDeletedMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\"8\n\x11SessionDetailsMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\x12\x12\n\ndetections\x18\x02 \x01(\x05\"\xb1\x01\n\nSessionMsg\x12/\n\x0bnew_session\x18\x01 \x01(\x0b\x32\x18.bluetooth.NewSessionMsgH\x00\x12\x33\n\x0b\x64\x65l_session\x18\x02 \x01(\x0b\x32\x1c.bluetooth.SessionDeletedMsgH\x00\x12\x34\n\x0csess_details\x18\x03 \x01(\x0b\x32\x1c.bluetooth.SessionDetailsMsgH\x00\x42\x07\n\x05inner\"o\n\x08ImageMsg\x12+\n\x06header\x18\x01 \x01(\x0b\x32\x19.bluetooth.ImageHeaderMsgH\x00\x12-\n\x07segment\x18\x02 \x01(\x0b\x32\x1a.bluetooth.ImageSegmentMsgH\x00\x42\x07\n\x05inner\"A\n\x0eImageHeaderMsg\x12\r\n\x05width\x18\x01 \x01(\x05\x12\x0e\n\x06height\x18\x02 \x01(\x05\x12\x10\n\x08segments\x18\x03 \x01(\x05\"0\n\x0fImageSegmentMsg\x12\x0f\n\x07segment\x18\x01 \x01(\x05\x12\x0c\n\x04\x64\x61ta\x18\x02 \x01(\x0c\";\n\x15\x44\x65tectionReferenceMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\x12\x11\n\tdetection\x18\x02 \x01(\t\"\x99\x01\n\x14\x44\x65tectionMetadataMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\x12\x11\n\tdetection\x18\x02 \x01(\x05\x12\x0f\n\x07\x63reated\x18\x03 \x01(\x03\x12\x0f\n\x07updated\x18\x04 \x01(\x03\x12\r\n\x05score\x18\x05 \x01(\x02\x12\r\n\x05\x63lazz\x18\x06 \x01(\x05\x12\r\n\x05width\x18\x07 \x01(\x05\x12\x0e\n\x06height\x18\x08 \x01(\x05\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x62luetooth.proto\" \n\rNewSessionMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\"$\n\x11SessionDeletedMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\"8\n\x11SessionDetailsMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\x12\x12\n\ndetections\x18\x02 \x01(\x05\"\x93\x01\n\nSessionMsg\x12%\n\x0bnew_session\x18\x01 \x01(\x0b\x32\x0e.NewSessionMsgH\x00\x12)\n\x0b\x64\x65l_session\x18\x02 \x01(\x0b\x32\x12.SessionDeletedMsgH\x00\x12*\n\x0csess_details\x18\x03 \x01(\x0b\x32\x12.SessionDetailsMsgH\x00\x42\x07\n\x05inner\"[\n\x08ImageMsg\x12!\n\x06header\x18\x01 \x01(\x0b\x32\x0f.ImageHeaderMsgH\x00\x12#\n\x07segment\x18\x02 \x01(\x0b\x32\x10.ImageSegmentMsgH\x00\x42\x07\n\x05inner\"e\n\x0eImageHeaderMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\x12\x11\n\tdetection\x18\x02 \x01(\x05\x12\r\n\x05width\x18\x03 \x01(\x05\x12\x0e\n\x06height\x18\x04 \x01(\x05\x12\x10\n\x08segments\x18\x05 \x01(\x05\"T\n\x0fImageSegmentMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\x12\x11\n\tdetection\x18\x02 \x01(\x05\x12\x0f\n\x07segment\x18\x03 \x01(\x05\x12\x0c\n\x04\x64\x61ta\x18\x04 \x01(\x0c\"[\n\x08\x46rameMsg\x12!\n\x06header\x18\x01 \x01(\x0b\x32\x0f.FrameHeaderMsgH\x00\x12#\n\x07segment\x18\x02 \x01(\x0b\x32\x10.FrameSegmentMsgH\x00\x42\x07\n\x05inner\"T\n\x0e\x46rameHeaderMsg\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\r\n\x05width\x18\x02 \x01(\x05\x12\x0e\n\x06height\x18\x03 \x01(\x05\x12\x10\n\x08segments\x18\x04 \x01(\x05\"C\n\x0f\x46rameSegmentMsg\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\x0f\n\x07segment\x18\x02 \x01(\x05\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\x0c\"*\n\x17\x44\x65tectionsForSessionMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\";\n\x15\x44\x65tectionReferenceMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\x12\x11\n\tdetection\x18\x02 \x01(\x05\"\x99\x01\n\x14\x44\x65tectionMetadataMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\x12\x11\n\tdetection\x18\x02 \x01(\x05\x12\x0f\n\x07\x63reated\x18\x03 \x01(\x03\x12\x0f\n\x07updated\x18\x04 \x01(\x03\x12\r\n\x05score\x18\x05 \x01(\x02\x12\r\n\x05\x63lazz\x18\x06 \x01(\x05\x12\r\n\x05width\x18\x07 \x01(\x05\x12\x0e\n\x06height\x18\x08 \x01(\x05\x62\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'bluetooth_pb2', globals())
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  _NEWSESSIONMSG._serialized_start=30
-  _NEWSESSIONMSG._serialized_end=62
-  _SESSIONDELETEDMSG._serialized_start=64
-  _SESSIONDELETEDMSG._serialized_end=100
-  _SESSIONDETAILSMSG._serialized_start=102
-  _SESSIONDETAILSMSG._serialized_end=158
-  _SESSIONMSG._serialized_start=161
-  _SESSIONMSG._serialized_end=338
-  _IMAGEMSG._serialized_start=340
-  _IMAGEMSG._serialized_end=451
-  _IMAGEHEADERMSG._serialized_start=453
-  _IMAGEHEADERMSG._serialized_end=518
-  _IMAGESEGMENTMSG._serialized_start=520
-  _IMAGESEGMENTMSG._serialized_end=568
-  _DETECTIONREFERENCEMSG._serialized_start=570
-  _DETECTIONREFERENCEMSG._serialized_end=629
-  _DETECTIONMETADATAMSG._serialized_start=632
-  _DETECTIONMETADATAMSG._serialized_end=785
+  _NEWSESSIONMSG._serialized_start=19
+  _NEWSESSIONMSG._serialized_end=51
+  _SESSIONDELETEDMSG._serialized_start=53
+  _SESSIONDELETEDMSG._serialized_end=89
+  _SESSIONDETAILSMSG._serialized_start=91
+  _SESSIONDETAILSMSG._serialized_end=147
+  _SESSIONMSG._serialized_start=150
+  _SESSIONMSG._serialized_end=297
+  _IMAGEMSG._serialized_start=299
+  _IMAGEMSG._serialized_end=390
+  _IMAGEHEADERMSG._serialized_start=392
+  _IMAGEHEADERMSG._serialized_end=493
+  _IMAGESEGMENTMSG._serialized_start=495
+  _IMAGESEGMENTMSG._serialized_end=579
+  _FRAMEMSG._serialized_start=581
+  _FRAMEMSG._serialized_end=672
+  _FRAMEHEADERMSG._serialized_start=674
+  _FRAMEHEADERMSG._serialized_end=758
+  _FRAMESEGMENTMSG._serialized_start=760
+  _FRAMESEGMENTMSG._serialized_end=827
+  _DETECTIONSFORSESSIONMSG._serialized_start=829
+  _DETECTIONSFORSESSIONMSG._serialized_end=871
+  _DETECTIONREFERENCEMSG._serialized_start=873
+  _DETECTIONREFERENCEMSG._serialized_end=932
+  _DETECTIONMETADATAMSG._serialized_start=935
+  _DETECTIONMETADATAMSG._serialized_end=1088
 # @@protoc_insertion_point(module_scope)

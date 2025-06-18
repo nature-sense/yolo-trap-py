@@ -21,7 +21,7 @@ class IpcServer:
             client_socket, _ = await self.loop.sock_accept(self.server)
             while True:
                 try:
-                    data = await self.loop.sock_recv(client_socket, 8192)
+                    data = await self.loop.sock_recv(client_socket, 131072)
                     if not data:
                         break
                     await self.session_server.handle_message(data)

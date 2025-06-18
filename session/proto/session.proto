@@ -8,6 +8,7 @@ message SessionMsg {
          NewDetectionMsg new_detection = 2;
          UpdateDetectionMetaMsg  update_detection_meta = 3;
          UpdateDetectionMsg update_detection = 4;
+         FrameMsg stream_frame = 5;
      }
 }
 
@@ -26,16 +27,21 @@ message NewDetectionMsg {
 }
 
 message UpdateDetectionMetaMsg {
-    int64 updated = 1;
+    int32 detection = 1;
+    int64 updated = 2;
 }
 
 message UpdateDetectionMsg {
-    int64 updated = 1;
-    float score = 2;
-    int32 width = 3;
-    int32 height = 4;
-    bytes img_data = 5;
+    int32 detection = 1;
+    int64 updated = 2;
+    float score = 3;
+    int32 width = 4;
+    int32 height = 5;
+    bytes img_data = 6;
 }
 
-
+message FrameMsg {
+    int64 timestamp = 1;
+    bytes frame = 2;
+}
 

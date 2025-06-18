@@ -62,4 +62,4 @@ class YoloNativeFlow(DetectFlow):
                         self.save_detections(m, zip(boxes, track_ids, scores, classes))
                     except AttributeError :
                         print("ERROR IN TENSOR")
-                    request.release()
+            request.release()

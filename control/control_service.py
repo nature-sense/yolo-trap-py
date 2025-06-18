@@ -13,11 +13,16 @@ from bless import (
 )
 
 from control.bluetooth_messages import (
-    SessionDetailsMessage,
-    ImageHeaderMessage,
-    ImageSegmentMessage,
-    DetectionReferenceMessage, NewSessionMessage, DeleteSessionMessage,
+    DetectionReferenceMessage,
+    DetectionsForSessionMessage,
 )
+
+from control.notifiers.detection_notifier import DetectionNotifier
+from control.notifiers.image_sender import ImageSender
+from control.notifiers.image_streamer import ImageStreamer
+from control.notifiers.session_notifier import SessionNotifier
+from control.uuids import SERVICE_UUID, SESSION_LIST_REQ_UUID, SESSION_NOTIF_UUID, DETECTIONS_LIST_REQ_UUID, \
+    DETECTION_NOTIF_UUID, IMAGE_REQ_UUID, IMAGE_SEGMENT_UUID, PREVIEW_STREAM_UUID, FLOW_UUID
 
 from session.session_service import SessionService
 
@@ -28,68 +33,33 @@ MAX_TRACKING = 10
 MAX_SESSIONS = 3
 MIN_SCORE = 0.5
 
+NO_FLOW = 0
+DETECT_FLOW = 1
+PREVIEW_FLOW = 2
+
 IMAGE_SEGMENT = 200
 
 MAIN_SIZE = (2028, 1520)
 LORES_SIZE = (320,320)
 
-SERVICE_UUID    = "213e313b-d0df-4350-8e5d-ae657962bb56"
-STATE_UUID      = "f4a6c1ed-86ff-4c01-932f-7c810dc66b43"
-IMAGE_UUID      = "8029922b-2e7e-4a16-8794-f74fc4915d16"
-SESSION_LIST_REQ_UUID = "c254eaaf-a9f3-4823-a022-1d817a11de07"
-SESSION_NOTIF_UUID = "1319bc48-793d-4bb0-a4c6-d5001c629651"
-SESSION_DETAILS_REQ_UUID = "5b56f92a-f283-4711-9787-97df31f48991"
- #= "3b3a7400-681b-42ea-8202-8437057e7f1c"
-
-IMAGE_DETAILS_REQ_UUID = "f59cef6f-8af1-4636-ad8a-23cb2e12da5d"
-IMAGE_DETAILS_UUID = "8bf01881-cfbe-48b2-aca6-f7f25c796943"
-
-class SessionNotifier :
-    def __init__(self, bluetooth_server):
-        self.bluetooth_server = bluetooth_server
-        self.notif_queue = asyncio.Queue()
-        self.tasks = set()
-        self.logger = logging.getLogger(name=__name__)
-
-
-    async def start(self) :
-        task = asyncio.create_task(self.publish())
-        self.tasks.add(task)
-        task.add_done_callback(self.tasks.discard)
-
-    async def notify_new_session(self, session)  :
-        msg = NewSessionMessage(session).to_proto()
-        await self.notif_queue.put(msg)
-
-    async def notify_delete_session(self, session) :
-        msg = DeleteSessionMessage(session).to_proto()
-        await self.notif_queue.put(msg)
-
-    async def notify_session_details(self, session, detections):
-        msg = SessionDetailsMessage(session, detections).to_proto()
-        await self.notif_queue.put(msg)
-
-    async def publish(self) :
-        characteristic = self.bluetooth_server.get_characteristic(SESSION_NOTIF_UUID)
-
-        while True:
-            msg = await self.notif_queue.get()
-            characteristic.value = msg
-            result = self.bluetooth_server.update_value(SERVICE_UUID, SESSION_NOTIF_UUID)
-            self.logger.debug(f"Notify result = {result}")
-
 
 class ControlService:
-    def __init__(self, detector) -> None:
+    def __init__(self, detector, previewer) -> None:
         logging.basicConfig(level=logging.DEBUG)
 
         self.trigger = asyncio.Event()
         self.logger = logging.getLogger(name=__name__)
-        self.detector = detector
+        self.detector = detector # detector flow
+        self.previewer = previewer # preview flow
+
         self.session_server = None
         self.process = None
         self.bluetooth_server = None
         self.session_notifier = None
+        self.detection_notifier = None
+        self.image_sender = None
+        self.image_streamer = None
+        self.active_flow = NO_FLOW
 
         self.node_name = os.uname().nodename.upper()
         self.background_tasks = set()
@@ -105,36 +75,44 @@ class ControlService:
         self.bluetooth_server.read_request_func = self.read_request
         self.bluetooth_server.write_request_func = self.write_request
         self.session_notifier = SessionNotifier(self.bluetooth_server)
+        self.detection_notifier = DetectionNotifier(self.bluetooth_server)
+        self.image_sender = ImageSender(self.bluetooth_server)
+        self.image_streamer = ImageStreamer(self.bluetooth_server)
         self.session_server = SessionService(MAX_SESSIONS, SESSIONS_DIRECTORY, self)
 
         # Add Service
         await self.bluetooth_server.add_new_service(SERVICE_UUID)
-        await self.add_read_write_char(STATE_UUID, bin(0))
+        await self.add_read_write_char(FLOW_UUID, bin(0))
+        await self.add_notif_char(PREVIEW_STREAM_UUID, bin(0)),
+
         await self.add_read_write_char(SESSION_LIST_REQ_UUID, bin(0))
-        await self.add_write_char(SESSION_DETAILS_REQ_UUID, bin(0))
-        await self.add_write_char(IMAGE_DETAILS_REQ_UUID, bin(0))
-        #await self.add_notif_char(SESSION_LIST_ENTRY_UUID, bin(0))
         await self.add_notif_char(SESSION_NOTIF_UUID, bin(0))
-        await self.add_notif_char(IMAGE_DETAILS_UUID, bin(0))
+
+        await self.add_read_write_char(DETECTIONS_LIST_REQ_UUID, bin(0))
+        await self.add_notif_char(DETECTION_NOTIF_UUID, bin(0))
+
+        await self.add_read_write_char(IMAGE_REQ_UUID, bin(0))
+        await self.add_notif_char(IMAGE_SEGMENT_UUID, bin(0))
 
         await self.session_notifier.start()
+        await self.detection_notifier.start()
+        await self.image_sender.start()
+        await self.image_streamer.start()
         await self.session_server.start_service()
         await self.bluetooth_server.start()
-
 
         self.logger.debug("Advertising")
         await self.trigger.wait()
 
     def read_request(self, characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
         self.logger.debug(f"Reading {characteristic.value}")
-        if characteristic.uuid == SESSION_LIST_REQ_UUID:
-            self.session_list()
-            return characteristic.value
-        else:
-            return characteristic.value
+        if characteristic.uuid == FLOW_UUID:
+            characteristic.value = [self.active_flow]
+        return characteristic.value
 
     def write_request(self, characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
-        if characteristic.uuid == STATE_UUID:
+        if characteristic.uuid == FLOW_UUID:
+            self.logger.debug("Request set-flow")
             self.change_state(characteristic, value)
             
         elif characteristic.uuid == SESSION_LIST_REQ_UUID:
@@ -142,39 +120,56 @@ class ControlService:
             task = asyncio.create_task(self.session_list())
             self.background_tasks.add(task)
             task.add_done_callback(self.background_tasks.discard)
-            
-        #elif characteristic.uuid == SESSION_DETAILS_REQ_UUID:
-        #    session = SessionReference.from_proto(value).session
-        #    #session = value.decode("utf-8")
-        #    self.logger.debug("Request details for session " + session)
-        #    task = asyncio.create_task(self.image_list(session))
-        #    self.background_tasks.add(task)
-        #    task.add_done_callback(self.background_tasks.discard)
-            
-        #elif characteristic.uuid == IMAGE_DETAILS_REQ_UUID:
-        #    image_ref = DetectionReference.from_proto(value)
-        #    self.logger.debug(f"Request details for image " + image_ref.session + " " + image_ref.image)
-        #    task = asyncio.create_task(self.image_details(image_ref))
-        #    self.background_tasks.add(task)
-        #    task.add_done_callback(self.background_tasks.discard)
+
+        elif characteristic.uuid == DETECTIONS_LIST_REQ_UUID:
+            session = DetectionsForSessionMessage.from_proto(value).session
+            self.logger.debug(f"Request detections list {session}")
+            task = asyncio.create_task(self.detections_list(session))
+            self.background_tasks.add(task)
+            task.add_done_callback(self.background_tasks.discard)
+
+        elif characteristic.uuid == IMAGE_REQ_UUID:
+            req = DetectionReferenceMessage.from_proto(value)
+            self.logger.debug(f"Request image {req.session, req.detection}")
+            task = asyncio.create_task(self.segmented_image(req.session, req.detection))
+            self.background_tasks.add(task)
+            task.add_done_callback(self.background_tasks.discard)
 
 
     def change_state(self, characteristic, value):
-        old_state = characteristic.value[0] == 1
-        new_state = value[0] == 1
+        old_state = self.active_flow
+        new_state = int(value[0])
         self.logger.debug(f"Change state - old = {old_state} new = {new_state}")
 
-        if old_state != new_state:
-            characteristic.value = value
-
-            if new_state is True:
+        if old_state is NO_FLOW:
+            if new_state == DETECT_FLOW:
                 self.process = Process(target=self.detector, args=())
                 self.process.start()
-            else:
-                self.process.terminate()
+            elif new_state == PREVIEW_FLOW:
+                self.process = Process(target=self.previewer, args=())
+                self.process.start()
 
-            #characteristic.update()
-            self.logger.debug(f"State set to {characteristic.value}")
+        elif old_state != DETECT_FLOW:
+            if new_state == NO_FLOW:
+                self.process.terminate()
+            elif new_state == PREVIEW_FLOW:
+                self.process.terminate()
+                self.process = Process(target=self.previewer, args=())
+                self.process.start()
+
+        elif old_state != PREVIEW_FLOW:
+            if new_state == NO_FLOW:
+                self.process.terminate()
+            elif new_state == DETECT_FLOW:
+                self.process.terminate()
+                self.process = Process(target=self.detector, args=())
+                self.process.start()
+
+        characteristic.value = [new_state]
+        self.active_flow = new_state
+        #characteristic.update()
+
+        self.logger.debug(f"flow set to {new_state}")
 
     async def session_list(self):
         self.logger.debug("Session list")
@@ -183,43 +178,38 @@ class ControlService:
             self.logger.debug(f"Updating Session = {session}")
             await self.session_notifier.notify_session_details(session[0], session[1])
 
+    async def detections_list(self, session):
+        self.logger.debug("Detections list")
+        detections = self.session_server.list_detections_for_session(session)
+        for detection in detections:
+            self.logger.debug(f"Notifying detection = {detection}")
+            await self.detection_notifier.notify_detection_meta(detections[detection])
 
-    #async def image_list(self, session):
-    #    images = self.session_server.list_images_for_session(session)
-    #    session_details_char = self.bluetooth_server.get_characteristic(SESSION_DETAILS_UUID)
+    async def segmented_image(self, session, detection):
+        """
+        Segment a detection image and sent the parts via the 'image_sender'
+        """
+        meta, img = self.session_server.get_image_data(session, detection)
+        segments = math.ceil(len(img) / IMAGE_SEGMENT)
 
-    #    for image in images:
-    #        session_details_char.value = DetectionReferenceMessage(session, image).to_proto()
-
-    #        self.logger.debug(f"Image {image}")
-    #        result = self.bluetooth_server.update_value(SERVICE_UUID, SESSION_DETAILS_UUID)
-    #        self.logger.debug(f"result = {result}")
-
-    async def image_details(self, image_ref):
-        image_details_char = self.bluetooth_server.get_characteristic(IMAGE_DETAILS_UUID)
-        meta, img = self.session_server.get_image_data(image_ref.session, image_ref.image)
-        segments = math.ceil(len(img)/IMAGE_SEGMENT)
-
-        image_details_char.value = ImageHeaderMessage(meta, segments).to_proto()
-        result = self.bluetooth_server.update_value(SERVICE_UUID, IMAGE_DETAILS_UUID)
-        self.logger.debug(f"result = {result}")
+        #Send the header
+        await self.image_sender.send_header(session, detection, meta.width, meta.height, segments)
 
         start_index = 0
         segment = 1
-        while start_index < len(img) :
-            img_seg = img[start_index:start_index+IMAGE_SEGMENT]
-            image_details_char.value = ImageSegmentMessage(segment, img_seg).to_proto()
-            segment = segment+1
+        while start_index < len(img):
+            img_seg = img[start_index:start_index + IMAGE_SEGMENT]
+            await self.image_sender.send_segment(session, detection, segment, img_seg)
+            segment = segment + 1
             start_index = start_index + IMAGE_SEGMENT
-            result = self.bluetooth_server.update_value(SERVICE_UUID, IMAGE_DETAILS_UUID)
-            self.logger.debug(f"result = {result}")
-        if start_index != len(img) :
+
+        if start_index != len(img):
             segment = segment + 1
             img_seg = img[start_index:]
-            image_details_char.value = ImageSegmentMessage(segment, img_seg )
-            result = self.bluetooth_server.update_value(SERVICE_UUID, IMAGE_DETAILS_UUID)
-            self.logger.debug(f"result = {result}")
+            await self.image_sender.send_segment(session, segment, segment, img_seg)
+
         self.logger.debug(f"last segment = {segment}")
+
 
     async def add_read_write_char(self, uuid, value):
         # Add a Characteristic to the service

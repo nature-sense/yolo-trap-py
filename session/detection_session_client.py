@@ -21,7 +21,8 @@ class FixedSizeMap:
         self.keys.append(key)
 
     def get(self, key):
-        return self.map.get(key)
+        val = self.map.get(key)
+        return val
 
     def remove(self, key):
         if key in self.map:
@@ -31,7 +32,7 @@ class FixedSizeMap:
     def __len__(self):
         return len(self.map)
 
-class SessionClient:
+class DetectionSessionClient:
     def __init__(self, size, session):
         self.session = session
         self.cache = FixedSizeMap(size)
@@ -42,7 +43,7 @@ class SessionClient:
         self.ipc.send(msg)
 
     def get_detection_metadata(self, detection):
-        self.cache.get(detection)
+        return self.cache.get(detection)
 
     def new_detection(self, detection_metadata, image):
         self.cache.add(detection_metadata.detection, detection_metadata)

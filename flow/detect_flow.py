@@ -5,7 +5,11 @@ from datetime import datetime
 import cv2
 
 from session.detection_metadata import DetectionMetadata
-from session.session_client import SessionClient
+from session.detection_session_client import DetectionSessionClient
+
+
+class DetectSessionClient:
+    pass
 
 
 class DetectFlow(ABC):
@@ -21,7 +25,7 @@ class DetectFlow(ABC):
 
         now = datetime.now()
         self.current_session = now.strftime("%Y%d%m%H%M%S")
-        self.session_client = SessionClient(max_tracking, self.current_session)
+        self.session_client = DetectionSessionClient(max_tracking, self.current_session)
 
     @abstractmethod
     def flow_task(self):

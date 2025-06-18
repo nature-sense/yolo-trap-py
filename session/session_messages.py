@@ -15,7 +15,8 @@ class MsgType(Enum) :
     NEW_DETECTION = 2,
     UPDATE_DETECTION_META = 3,
     UPDATE_DETECTION = 4,
-    UNKNOWN = 5
+    STREAM_FRAME = 5,
+    UNKNOWN = 6
 
 class NewSessionMessage :
 
@@ -84,27 +85,30 @@ class NewDetectionMessage :
         )
 
 class UpdateDetectionMetaMessage :
-    def __init__(self, updated):
+    def __init__(self, detection, updated):
+        self.detection = detection
         self.updated = updated
 
     @staticmethod
     def from_detection_metadata(detection_metadata):
-        return UpdateDetectionMetaMessage(detection_metadata.updated)
+        return UpdateDetectionMetaMessage(detection_metadata.detection, detection_metadata.updated)
 
     def to_proto(self):
         session_msg = session_pb2.SessionMsg()
         upd_detect_meta_msg = session_pb2.UpdateDetectionMetaMsg()
+        upd_detect_meta_msg.detection = self.detection
         upd_detect_meta_msg.updated = self.updated
         session_msg.update_detection_meta.CopyFrom(upd_detect_meta_msg)
         return session_msg.SerializeToString()
 
     @staticmethod
     def from_proto(msg):
-        return UpdateDetectionMetaMessage(msg.updated)
+        return UpdateDetectionMetaMessage(msg.detection, msg.updated)
 
 
 class UpdateDetectionMessage :
-    def __init__(self, updated, score, width, height, img_data):
+    def __init__(self, detection, updated, score, width, height, img_data):
+        self.detection = detection
         self.updated = updated
         self.score = score
         self.width = width
@@ -114,6 +118,7 @@ class UpdateDetectionMessage :
     @staticmethod
     def from_detection_metadata(detection_metadata, img_data):
         return UpdateDetectionMessage(
+            detection_metadata.detection,
             detection_metadata.updated,
             detection_metadata.score,
             detection_metadata.width,
@@ -124,6 +129,7 @@ class UpdateDetectionMessage :
     def to_proto(self):
         session_msg = session_pb2.SessionMsg()
         upd_detect_msg = session_pb2.UpdateDetectionMsg()
+        upd_detect_msg.detection = self.detection
         upd_detect_msg.updated = self.updated
         upd_detect_msg.score = self.score
         upd_detect_msg.width = self.width
@@ -135,11 +141,32 @@ class UpdateDetectionMessage :
     @staticmethod
     def from_proto(msg):
         return UpdateDetectionMessage(
+            msg.detection,
             msg.updated,
             msg.score,
             msg.width,
             msg.height,
             msg.img_data
+        )
+
+class FrameMessage :
+    def __init__(self, timestamp, frame):
+        self.timestamp = timestamp
+        self.frame = frame
+
+    def to_proto(self):
+        session_msg = session_pb2.SessionMsg()
+        prev_frm_msg = session_pb2.FrameMsg()
+        prev_frm_msg.timestamp = self.timestamp
+        prev_frm_msg.frame = self.frame
+        session_msg.stream_frame.CopyFrom(prev_frm_msg)
+        return session_msg.SerializeToString()
+
+    @staticmethod
+    def from_proto(msg):
+        return FrameMessage(
+            msg.timestamp,
+            msg.frame,
         )
 
 class SessionMessage :
@@ -158,6 +185,8 @@ class SessionMessage :
                 return MsgType.UPDATE_DETECTION_META, UpdateDetectionMetaMessage.from_proto(msg.update_detection_meta)
             elif type == "update_detection":
                 return MsgType.UPDATE_DETECTION, UpdateDetectionMessage.from_proto(msg.update_detection)
+            elif type == "stream_frame":
+                return MsgType.STREAM_FRAME, FrameMessage.from_proto(msg.stream_frame)
             else :
                 return MsgType.UNKNOWN, None
         except Exception :

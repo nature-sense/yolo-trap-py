@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rsession.proto\x12\x07session\"\xf2\x01\n\nSessionMsg\x12-\n\x0bnew_session\x18\x01 \x01(\x0b\x32\x16.session.NewSessionMsgH\x00\x12\x31\n\rnew_detection\x18\x02 \x01(\x0b\x32\x18.session.NewDetectionMsgH\x00\x12@\n\x15update_detection_meta\x18\x03 \x01(\x0b\x32\x1f.session.UpdateDetectionMetaMsgH\x00\x12\x37\n\x10update_detection\x18\x04 \x01(\x0b\x32\x1b.session.UpdateDetectionMsgH\x00\x42\x07\n\x05inner\" \n\rNewSessionMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\"\x84\x01\n\x0fNewDetectionMsg\x12\x11\n\tdetection\x18\x01 \x01(\x05\x12\x0f\n\x07\x63reated\x18\x02 \x01(\x03\x12\r\n\x05score\x18\x03 \x01(\x02\x12\r\n\x05\x63lazz\x18\x04 \x01(\x05\x12\r\n\x05width\x18\x05 \x01(\x05\x12\x0e\n\x06height\x18\x06 \x01(\x05\x12\x10\n\x08img_data\x18\x07 \x01(\x0c\")\n\x16UpdateDetectionMetaMsg\x12\x0f\n\x07updated\x18\x01 \x01(\x03\"e\n\x12UpdateDetectionMsg\x12\x0f\n\x07updated\x18\x01 \x01(\x03\x12\r\n\x05score\x18\x02 \x01(\x02\x12\r\n\x05width\x18\x03 \x01(\x05\x12\x0e\n\x06height\x18\x04 \x01(\x05\x12\x10\n\x08img_data\x18\x05 \x01(\x0c\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rsession.proto\x12\x07session\"\x9d\x02\n\nSessionMsg\x12-\n\x0bnew_session\x18\x01 \x01(\x0b\x32\x16.session.NewSessionMsgH\x00\x12\x31\n\rnew_detection\x18\x02 \x01(\x0b\x32\x18.session.NewDetectionMsgH\x00\x12@\n\x15update_detection_meta\x18\x03 \x01(\x0b\x32\x1f.session.UpdateDetectionMetaMsgH\x00\x12\x37\n\x10update_detection\x18\x04 \x01(\x0b\x32\x1b.session.UpdateDetectionMsgH\x00\x12)\n\x0cstream_frame\x18\x05 \x01(\x0b\x32\x11.session.FrameMsgH\x00\x42\x07\n\x05inner\" \n\rNewSessionMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\"\x84\x01\n\x0fNewDetectionMsg\x12\x11\n\tdetection\x18\x01 \x01(\x05\x12\x0f\n\x07\x63reated\x18\x02 \x01(\x03\x12\r\n\x05score\x18\x03 \x01(\x02\x12\r\n\x05\x63lazz\x18\x04 \x01(\x05\x12\r\n\x05width\x18\x05 \x01(\x05\x12\x0e\n\x06height\x18\x06 \x01(\x05\x12\x10\n\x08img_data\x18\x07 \x01(\x0c\"<\n\x16UpdateDetectionMetaMsg\x12\x11\n\tdetection\x18\x01 \x01(\x05\x12\x0f\n\x07updated\x18\x02 \x01(\x03\"x\n\x12UpdateDetectionMsg\x12\x11\n\tdetection\x18\x01 \x01(\x05\x12\x0f\n\x07updated\x18\x02 \x01(\x03\x12\r\n\x05score\x18\x03 \x01(\x02\x12\r\n\x05width\x18\x04 \x01(\x05\x12\x0e\n\x06height\x18\x05 \x01(\x05\x12\x10\n\x08img_data\x18\x06 \x01(\x0c\",\n\x08\x46rameMsg\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\r\n\x05\x66rame\x18\x02 \x01(\x0c\x62\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'session_pb2', globals())
@@ -21,13 +21,15 @@ if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
   _SESSIONMSG._serialized_start=27
-  _SESSIONMSG._serialized_end=269
-  _NEWSESSIONMSG._serialized_start=271
-  _NEWSESSIONMSG._serialized_end=303
-  _NEWDETECTIONMSG._serialized_start=306
-  _NEWDETECTIONMSG._serialized_end=438
-  _UPDATEDETECTIONMETAMSG._serialized_start=440
-  _UPDATEDETECTIONMETAMSG._serialized_end=481
-  _UPDATEDETECTIONMSG._serialized_start=483
-  _UPDATEDETECTIONMSG._serialized_end=584
+  _SESSIONMSG._serialized_end=312
+  _NEWSESSIONMSG._serialized_start=314
+  _NEWSESSIONMSG._serialized_end=346
+  _NEWDETECTIONMSG._serialized_start=349
+  _NEWDETECTIONMSG._serialized_end=481
+  _UPDATEDETECTIONMETAMSG._serialized_start=483
+  _UPDATEDETECTIONMETAMSG._serialized_end=543
+  _UPDATEDETECTIONMSG._serialized_start=545
+  _UPDATEDETECTIONMSG._serialized_end=665
+  _FRAMEMSG._serialized_start=667
+  _FRAMEMSG._serialized_end=711
 # @@protoc_insertion_point(module_scope)

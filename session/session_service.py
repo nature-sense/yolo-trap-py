@@ -42,22 +42,27 @@ class SessionCache:
        if sess is not None :
            sess[detection_metadata.detection] = detection_metadata
 
-    def get_metadata(self, session, image):
+    def count_detections(self, session) :
+        return len(self.sessions.get(session))
+
+    def get_detection(self, session, detection ):
         sess = self.sessions.get(session)
         if sess is not None :
-            meta = sess.get(image)
+            meta = sess.get(detection)
             if meta is not None :
                 return meta
         return None
 
-    def set_metadata(self, session, image, image_metadata) :
+    def set_detection(self, session, detection_metadata) :
         sess = self.sessions.get(session)
         if sess is not None:
-            sess[image] = image_metadata
+            sess[detection_metadata.detection] = detection_metadata
 
     def list_sessions(self) :
         return map(lambda session : (session, len(self.sessions[session])), sorted(self.sessions.keys()))
 
+    def get_detections_for_session(self, session):
+        return self.sessions.get(session)
 
 class SessionService:
     def __init__(self, max_sessions, directory, control_service):
@@ -106,9 +111,11 @@ class SessionService:
                NEW_DETECTION
                UPDATE_DETECTION_META
                UPDATE_DETECTION
+               PREVIEW_FRAME
         """
 
         type, msg = SessionMessage.from_proto(proto)
+        print(f"Got message {type}", file=sys.stderr)
 
         # ==================================================================
         # NEW_SESSION
@@ -164,6 +171,11 @@ class SessionService:
                 file.write(msg.img_data)
 
             self.session_cache.new_detection(self.current_session, metadata)
+            await self.control_service.session_notifier.notify_session_details(
+                self.current_session,
+                self.session_cache.count_detections(self.current_session)
+            )
+            await self.control_service.detection_notifier.notify_detection_meta(metadata)
 
         # ==================================================================
         # UPDATE_DETECTION_META
@@ -171,11 +183,11 @@ class SessionService:
         # 2. Overwrite the data in the metadata file
         # ==================================================================
         elif type == MsgType.UPDATE_DETECTION_META :
-            meta = self.session_cache.get_metadata(self.current_session, msg.image)
+            meta = self.session_cache.get_detection(self.current_session, msg.detection)
             if meta is not None :
                 meta.updated = msg.updated
-                self.session_cache.set_metadata(self.current_session, msg.image, meta)
-                metadata_file = str(f"{self.metadata_dir}/{msg.img}.json")
+                self.session_cache.set_detection(self.current_session, meta)
+                metadata_file = str(f"{self.metadata_dir}/{meta.detection}.json")
                 with open(metadata_file, 'w') as file:
                     file.write(json.dumps(object_to_json(meta)))
 
@@ -187,20 +199,29 @@ class SessionService:
         # 3. Overwrite the image in the image file
         # ==================================================================
         elif type == MsgType.UPDATE_DETECTION :
-            meta = self.session_cache.get_metadata(self.current_session, msg.image)
+            meta = self.session_cache.get_detection(self.current_session, msg.detection)
             if meta is not None:
                 meta.updated = msg.updated
                 meta.score = msg.score
                 meta.width = msg.width
                 meta.height = msg.height
 
-                self.session_cache.set_metadata(self.current_session, msg.image, meta)
+                self.session_cache.set_detection(self.current_session, meta)
 
-                metadata_file = str(f"{self.metadata_dir}/{msg.img}.json")
+                metadata_file = str(f"{self.metadata_dir}/{msg.detection}.json")
                 with open(metadata_file, 'w') as file:
                     file.write(json.dumps(object_to_json(meta)))
+                try:
+                    cv2.imwrite(f"{self.image_dir}/{msg.detection}.jpg", msg.img_data)
+                except:
+                    self.logger.debug("Failed to save image")
 
-                cv2.imwrite(f"{self.image_dir}/{msg.img}.jpg", msg.img_data)
+        # ==================================================================
+        # PREVIEW_FRAME
+        # ==================================================================
+        elif type == MsgType.STREAM_FRAME :
+            self.logger.debug("Got frame - sending it to image streamer")
+            await self.control_service.image_streamer.addFrame(msg.timestamp, msg.frame)
 
         # Ignore unknown
         else :
@@ -209,6 +230,8 @@ class SessionService:
     def list_sessions(self):
         return self.session_cache.list_sessions()
 
+    def list_detections_for_session(self, session):
+        return self.session_cache.get_detections_for_session(session)
 
     async def _clean_up_sessions(self):
         sessions = sorted(os.listdir(self.directory))
@@ -224,7 +247,6 @@ class SessionService:
                 os.rmdir(sess_path)
                 self.session_cache.delete_session(sessions[idx])
                 await self.control_service.session_notifier.notify_delete_session(sessions[idx])
-
 
     def _delete_session_files(self, dir_path):
         print(dir_path)
