@@ -2,6 +2,7 @@ import logging
 import time
 from datetime import datetime
 
+from libcamera import controls
 from picamera2 import MappedArray, Picamera2
 
 from flow.stream_flow import StreamFlow
@@ -23,6 +24,7 @@ class YoloPreviewFlow(StreamFlow):
         )
 
         self.picam2.configure(camera_config)
+        self.picam2.set_controls({"AfMode": controls.AfModeEnum.Continuous})
         #self.picam2.set_controls({"AfMode": controls.AfModeEnum.Manual, "LensPosition": 0})  # 2.0})
         self.picam2.start(camera_config)
 
