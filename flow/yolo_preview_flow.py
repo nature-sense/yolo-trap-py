@@ -24,7 +24,11 @@ class YoloPreviewFlow(StreamFlow):
         )
 
         self.picam2.configure(camera_config)
-        self.picam2.set_controls({"AfMode": controls.AfModeEnum.Continuous})
+       # self.picam2.set_controls({"AfMode": controls.AfModeEnum.Continuous})
+       # self.picam2.set_controls({"AfRange": controls.AfRangeEnum.Macro})
+       # self.picam2.set_controls({"AfSpeed": controls.AfSpeedEnum.Fast})
+
+
         #self.picam2.set_controls({"AfMode": controls.AfModeEnum.Manual, "LensPosition": 0})  # 2.0})
         self.picam2.start(camera_config)
 

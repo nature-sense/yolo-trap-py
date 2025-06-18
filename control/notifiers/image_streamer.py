@@ -60,8 +60,9 @@ class ImageStreamer(Notifier) :
                 msg = FrameHeaderMessage(timestamp, 0, 0,segments).to_proto()
                 characteristic.value = msg
                 result = self.bluetooth_server.update_value(self.service, self.characteristic)
-                #self.logger.debug(f"Send notification result {result}")
-
+                if result is False:
+                    self.logger.error(f"Send notification failed {result}")
+                    
                 start_index = 0
                 segment = 1
                 while start_index < len(frame):
@@ -69,7 +70,8 @@ class ImageStreamer(Notifier) :
                     msg = FrameSegmentMessage(timestamp, segment, img_seg).to_proto()
                     characteristic.value = msg
                     result = self.bluetooth_server.update_value(self.service, self.characteristic)
-                    #self.logger.debug(f"Send notification result {result}")
+                    if result is False :
+                        self.logger.error(f"Send notification failed {result}")
                     segment = segment + 1
                     start_index = start_index + IMAGE_SEGMENT
 
@@ -79,8 +81,8 @@ class ImageStreamer(Notifier) :
                     msg = FrameSegmentMessage(timestamp, segment, img_seg).to_proto()
                     characteristic.value = msg
                     result = self.bluetooth_server.update_value(self.service, self.characteristic)
-                    #self.logger.debug(f"Send notification result {result}")
-
+                    if result is False :
+                        self.logger.error(f"Send notification failed {result}")
                 self.logger.debug(f"last segment = {segment}")
 
             else:
