@@ -19,7 +19,8 @@ MIN_SCORE = 0.5
 
 MAIN_SIZE = (2028, 1520)
 LORES_SIZE = (320,320)
-PREVIEW_SIZE = (640,480)
+#PREVIEW_SIZE = (640,480)
+PREVIEW_SIZE = (320,240)
 
 def run_detection() :
     yolo_detect_flow = YoloNativeFlow(

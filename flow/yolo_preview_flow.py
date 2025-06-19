@@ -7,7 +7,7 @@ from picamera2 import MappedArray, Picamera2
 
 from flow.stream_flow import StreamFlow
 
-FRAME_INTERVAL_SECONDS = 4
+FRAME_INTERVAL_SECONDS = 2
 
 class YoloPreviewFlow(StreamFlow):
 
