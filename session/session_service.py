@@ -223,6 +223,12 @@ class SessionService:
             self.logger.debug("Got frame - sending it to image streamer")
             await self.control_service.image_streamer.addFrame(msg.timestamp, msg.frame)
 
+        # ==================================================================
+        # STORAGE
+        # ==================================================================
+        elif type == MsgType.STORAGE :
+            self.logger.debug(f"Storage message - state = {msg.state}")
+
         # Ignore unknown
         else :
             pass

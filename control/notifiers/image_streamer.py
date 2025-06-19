@@ -62,7 +62,7 @@ class ImageStreamer(Notifier) :
                 result = self.bluetooth_server.update_value(self.service, self.characteristic)
                 if result is False:
                     self.logger.error(f"Send notification failed {result}")
-                    
+
                 start_index = 0
                 segment = 1
                 while start_index < len(frame):

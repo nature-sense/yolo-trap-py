@@ -16,7 +16,8 @@ class MsgType(Enum) :
     UPDATE_DETECTION_META = 3,
     UPDATE_DETECTION = 4,
     STREAM_FRAME = 5,
-    UNKNOWN = 6
+    STORAGE = 6.
+    UNKNOWN = 7
 
 class NewSessionMessage :
 
@@ -169,6 +170,24 @@ class FrameMessage :
             msg.frame,
         )
 
+class StorageMessage:
+    def __init__(self, mounted):
+        self.mounted = mounted
+
+    def to_proto(self):
+        session_msg = session_pb2.SessionMsg()
+        storage_msg = session_pb2.Storage.Msg()
+        storage_msg.timestamp = self.timestamp
+        session_msg.storage.CopyFrom(storage_msg)
+        return session_msg.SerializeToString()
+
+    @staticmethod
+    def from_proto(msg):
+        return StorageMessage(
+            msg.mounted
+        )
+
+
 class SessionMessage :
     @staticmethod
     def from_proto(proto):
@@ -187,6 +206,8 @@ class SessionMessage :
                 return MsgType.UPDATE_DETECTION, UpdateDetectionMessage.from_proto(msg.update_detection)
             elif type == "stream_frame":
                 return MsgType.STREAM_FRAME, FrameMessage.from_proto(msg.stream_frame)
+            elif type == "storage":
+                return MsgType.STORAGE,
             else :
                 return MsgType.UNKNOWN, None
         except Exception :

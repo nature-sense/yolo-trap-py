@@ -9,6 +9,7 @@ message SessionMsg {
          UpdateDetectionMetaMsg  update_detection_meta = 3;
          UpdateDetectionMsg update_detection = 4;
          FrameMsg stream_frame = 5;
+         StorageMsg storage = 6;
      }
 }
 
@@ -45,3 +46,6 @@ message FrameMsg {
     bytes frame = 2;
 }
 
+message StorageMsg {
+    bool mounted = 1;
+}
