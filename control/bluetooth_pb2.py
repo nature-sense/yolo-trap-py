@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x62luetooth.proto\" \n\rNewSessionMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\"$\n\x11SessionDeletedMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\"8\n\x11SessionDetailsMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\x12\x12\n\ndetections\x18\x02 \x01(\x05\"\x93\x01\n\nSessionMsg\x12%\n\x0bnew_session\x18\x01 \x01(\x0b\x32\x0e.NewSessionMsgH\x00\x12)\n\x0b\x64\x65l_session\x18\x02 \x01(\x0b\x32\x12.SessionDeletedMsgH\x00\x12*\n\x0csess_details\x18\x03 \x01(\x0b\x32\x12.SessionDetailsMsgH\x00\x42\x07\n\x05inner\"[\n\x08ImageMsg\x12!\n\x06header\x18\x01 \x01(\x0b\x32\x0f.ImageHeaderMsgH\x00\x12#\n\x07segment\x18\x02 \x01(\x0b\x32\x10.ImageSegmentMsgH\x00\x42\x07\n\x05inner\"e\n\x0eImageHeaderMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\x12\x11\n\tdetection\x18\x02 \x01(\x05\x12\r\n\x05width\x18\x03 \x01(\x05\x12\x0e\n\x06height\x18\x04 \x01(\x05\x12\x10\n\x08segments\x18\x05 \x01(\x05\"T\n\x0fImageSegmentMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\x12\x11\n\tdetection\x18\x02 \x01(\x05\x12\x0f\n\x07segment\x18\x03 \x01(\x05\x12\x0c\n\x04\x64\x61ta\x18\x04 \x01(\x0c\"[\n\x08\x46rameMsg\x12!\n\x06header\x18\x01 \x01(\x0b\x32\x0f.FrameHeaderMsgH\x00\x12#\n\x07segment\x18\x02 \x01(\x0b\x32\x10.FrameSegmentMsgH\x00\x42\x07\n\x05inner\"T\n\x0e\x46rameHeaderMsg\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\r\n\x05width\x18\x02 \x01(\x05\x12\x0e\n\x06height\x18\x03 \x01(\x05\x12\x10\n\x08segments\x18\x04 \x01(\x05\"C\n\x0f\x46rameSegmentMsg\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\x0f\n\x07segment\x18\x02 \x01(\x05\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\x0c\"*\n\x17\x44\x65tectionsForSessionMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\";\n\x15\x44\x65tectionReferenceMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\x12\x11\n\tdetection\x18\x02 \x01(\x05\"\x99\x01\n\x14\x44\x65tectionMetadataMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\x12\x11\n\tdetection\x18\x02 \x01(\x05\x12\x0f\n\x07\x63reated\x18\x03 \x01(\x03\x12\x0f\n\x07updated\x18\x04 \x01(\x03\x12\r\n\x05score\x18\x05 \x01(\x02\x12\r\n\x05\x63lazz\x18\x06 \x01(\x05\x12\r\n\x05width\x18\x07 \x01(\x05\x12\x0e\n\x06height\x18\x08 \x01(\x05\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0f\x62luetooth.proto\" \n\rNewSessionMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\"$\n\x11SessionDeletedMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\"8\n\x11SessionDetailsMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\x12\x12\n\ndetections\x18\x02 \x01(\x05\"\x93\x01\n\nSessionMsg\x12%\n\x0bnew_session\x18\x01 \x01(\x0b\x32\x0e.NewSessionMsgH\x00\x12)\n\x0b\x64\x65l_session\x18\x02 \x01(\x0b\x32\x12.SessionDeletedMsgH\x00\x12*\n\x0csess_details\x18\x03 \x01(\x0b\x32\x12.SessionDetailsMsgH\x00\x42\x07\n\x05inner\"[\n\x08ImageMsg\x12!\n\x06header\x18\x01 \x01(\x0b\x32\x0f.ImageHeaderMsgH\x00\x12#\n\x07segment\x18\x02 \x01(\x0b\x32\x10.ImageSegmentMsgH\x00\x42\x07\n\x05inner\"8\n\x08StateMsg\x12\x13\n\x0b\x61\x63tive_flow\x18\x01 \x01(\x05\x12\x17\n\x0fstorage_mounted\x18\x02 \x01(\x08\"e\n\x0eImageHeaderMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\x12\x11\n\tdetection\x18\x02 \x01(\x05\x12\r\n\x05width\x18\x03 \x01(\x05\x12\x0e\n\x06height\x18\x04 \x01(\x05\x12\x10\n\x08segments\x18\x05 \x01(\x05\"T\n\x0fImageSegmentMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\x12\x11\n\tdetection\x18\x02 \x01(\x05\x12\x0f\n\x07segment\x18\x03 \x01(\x05\x12\x0c\n\x04\x64\x61ta\x18\x04 \x01(\x0c\"[\n\x08\x46rameMsg\x12!\n\x06header\x18\x01 \x01(\x0b\x32\x0f.FrameHeaderMsgH\x00\x12#\n\x07segment\x18\x02 \x01(\x0b\x32\x10.FrameSegmentMsgH\x00\x42\x07\n\x05inner\"T\n\x0e\x46rameHeaderMsg\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\r\n\x05width\x18\x02 \x01(\x05\x12\x0e\n\x06height\x18\x03 \x01(\x05\x12\x10\n\x08segments\x18\x04 \x01(\x05\"C\n\x0f\x46rameSegmentMsg\x12\x11\n\ttimestamp\x18\x01 \x01(\x03\x12\x0f\n\x07segment\x18\x02 \x01(\x05\x12\x0c\n\x04\x64\x61ta\x18\x03 \x01(\x0c\"*\n\x17\x44\x65tectionsForSessionMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\";\n\x15\x44\x65tectionReferenceMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\x12\x11\n\tdetection\x18\x02 \x01(\x05\"\x99\x01\n\x14\x44\x65tectionMetadataMsg\x12\x0f\n\x07session\x18\x01 \x01(\t\x12\x11\n\tdetection\x18\x02 \x01(\x05\x12\x0f\n\x07\x63reated\x18\x03 \x01(\x03\x12\x0f\n\x07updated\x18\x04 \x01(\x03\x12\r\n\x05score\x18\x05 \x01(\x02\x12\r\n\x05\x63lazz\x18\x06 \x01(\x05\x12\r\n\x05width\x18\x07 \x01(\x05\x12\x0e\n\x06height\x18\x08 \x01(\x05\"<\n\nStorageMsg\x12\x0f\n\x07mounted\x18\x01 \x01(\x08\x12\x0e\n\x06volume\x18\x02 \x01(\t\x12\r\n\x05space\x18\x03 \x01(\x05\x62\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'bluetooth_pb2', globals())
@@ -30,20 +30,24 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _SESSIONMSG._serialized_end=297
   _IMAGEMSG._serialized_start=299
   _IMAGEMSG._serialized_end=390
-  _IMAGEHEADERMSG._serialized_start=392
-  _IMAGEHEADERMSG._serialized_end=493
-  _IMAGESEGMENTMSG._serialized_start=495
-  _IMAGESEGMENTMSG._serialized_end=579
-  _FRAMEMSG._serialized_start=581
-  _FRAMEMSG._serialized_end=672
-  _FRAMEHEADERMSG._serialized_start=674
-  _FRAMEHEADERMSG._serialized_end=758
-  _FRAMESEGMENTMSG._serialized_start=760
-  _FRAMESEGMENTMSG._serialized_end=827
-  _DETECTIONSFORSESSIONMSG._serialized_start=829
-  _DETECTIONSFORSESSIONMSG._serialized_end=871
-  _DETECTIONREFERENCEMSG._serialized_start=873
-  _DETECTIONREFERENCEMSG._serialized_end=932
-  _DETECTIONMETADATAMSG._serialized_start=935
-  _DETECTIONMETADATAMSG._serialized_end=1088
+  _STATEMSG._serialized_start=392
+  _STATEMSG._serialized_end=448
+  _IMAGEHEADERMSG._serialized_start=450
+  _IMAGEHEADERMSG._serialized_end=551
+  _IMAGESEGMENTMSG._serialized_start=553
+  _IMAGESEGMENTMSG._serialized_end=637
+  _FRAMEMSG._serialized_start=639
+  _FRAMEMSG._serialized_end=730
+  _FRAMEHEADERMSG._serialized_start=732
+  _FRAMEHEADERMSG._serialized_end=816
+  _FRAMESEGMENTMSG._serialized_start=818
+  _FRAMESEGMENTMSG._serialized_end=885
+  _DETECTIONSFORSESSIONMSG._serialized_start=887
+  _DETECTIONSFORSESSIONMSG._serialized_end=929
+  _DETECTIONREFERENCEMSG._serialized_start=931
+  _DETECTIONREFERENCEMSG._serialized_end=990
+  _DETECTIONMETADATAMSG._serialized_start=993
+  _DETECTIONMETADATAMSG._serialized_end=1146
+  _STORAGEMSG._serialized_start=1148
+  _STORAGEMSG._serialized_end=1208
 # @@protoc_insertion_point(module_scope)

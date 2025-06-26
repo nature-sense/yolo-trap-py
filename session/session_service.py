@@ -27,6 +27,9 @@ from session.detection_metadata import DetectionMetadata
 from session.ipc import IpcServer
 from session.session_messages import SessionMessage, MsgType
 
+STORAGE_DIRECTORY = "/media/usb"
+SESSIONS_DIRECTORY = STORAGE_DIRECTORY +"/sessions"
+
 class SessionCache:
     def __init__(self) :
         self.sessions = {}
@@ -65,12 +68,11 @@ class SessionCache:
         return self.sessions.get(session)
 
 class SessionService:
-    def __init__(self, max_sessions, directory, control_service):
+    def __init__(self, max_sessions, control_service):
         self.logger = logging.getLogger()
         self.session_cache = SessionCache()
         self.ipc_server = IpcServer(self)
         self.max_sessions = max_sessions
-        self.directory = directory
         self.control_service = control_service
 
         self.current_session = None
@@ -78,10 +80,20 @@ class SessionService:
         self.image_dir = None
         self.metadata_dir = None
 
-        self.build_cache()
+        self.check_storage()
 
     async def start_service(self)  :
         asyncio.create_task(self.ipc_server.run_server())
+
+    def check_storage(self):
+        if os.path.exists(STORAGE_DIRECTORY) :
+            if not os.path.exists(SESSIONS_DIRECTORY):
+                os.makedirs(SESSIONS_DIRECTORY)
+            self.build_cache()
+            self.control_service.state_controller.set_storage_state(True)
+            # nounted and ready to go
+        else:
+            self.control_service.state_controller.set_storage_state(False)
 
     def build_cache(self):
         """
@@ -91,7 +103,7 @@ class SessionService:
         and reading the image metadata
         """
         self.logger.debug("Rebuilding sessions cache....")
-        sessions = sorted(os.listdir(self.directory))
+        sessions = sorted(os.listdir(SESSIONS_DIRECTORY))
         for session in sessions:
             self.logger.debug("Found session %s", session)
             self.session_cache.new_session(session)
@@ -99,7 +111,6 @@ class SessionService:
             for detection in detections:
                 self.logger.debug("Found image %d", detection.detection)
                 self.session_cache.new_detection(session, detection)
-
 
     async def handle_message(self, proto):
         """
@@ -130,7 +141,7 @@ class SessionService:
 
             # Create the directories and an entry in the cache
             self.current_session = msg.session
-            self.session_dir = f"{self.directory}/{msg.session}"
+            self.session_dir = f"{SESSIONS_DIRECTORY}/{msg.session}"
             self.image_dir = f"{self.session_dir}/images"
             self.metadata_dir = f"{self.session_dir}/metadata"
 
@@ -227,7 +238,8 @@ class SessionService:
         # STORAGE
         # ==================================================================
         elif type == MsgType.STORAGE :
-            self.logger.debug(f"Storage message - state = {msg.state}")
+            self.logger.debug(f"Storage message - state = {msg.mounted}")
+            self.control_service.state_controller.set_storage_state(msg.mounted)
 
         # Ignore unknown
         else :
@@ -240,12 +252,12 @@ class SessionService:
         return self.session_cache.get_detections_for_session(session)
 
     async def _clean_up_sessions(self):
-        sessions = sorted(os.listdir(self.directory))
+        sessions = sorted(os.listdir(SESSIONS_DIRECTORY))
         num_sessions = len(sessions)
         print(f"num sesions {num_sessions} max sessions {self.max_sessions}")
         if num_sessions >= self.max_sessions:
             for idx in range(0, num_sessions-self.max_sessions+1):
-                sess_path = f"{self.directory}/{sessions[idx]}"
+                sess_path = f"{SESSIONS_DIRECTORY}/{sessions[idx]}"
                 img_path = f"{sess_path}/images"
                 self._delete_session_files(img_path)
                 meta_path = f"{sess_path}/metadata"
@@ -272,7 +284,7 @@ class SessionService:
 
     def _get_detections_metadata_for_session(self, session) :
         metadata_list = []
-        metadata_path = f"{self.directory}/{session}/metadata"
+        metadata_path = f"{SESSIONS_DIRECTORY}/{session}/metadata"
         files = sorted(os.listdir(metadata_path))
         for file in files:
             file_path = f"{metadata_path}/{file}"
@@ -283,8 +295,8 @@ class SessionService:
 
 
     def list_images_for_session(self, session):
-        image_path = f"{self.directory}/{session}/images"
-        metadata_path = f"{self.directory}/{session}/metadata"
+        image_path = f"{SESSIONS_DIRECTORY}/{session}/images"
+        metadata_path = f"{SESSIONS_DIRECTORY}/{session}/metadata"
         if not os.path.exists(image_path):
             print(f"Directory not found: {image_path}")
             return []
@@ -295,8 +307,8 @@ class SessionService:
         return map(lambda img : img.split(".")[0],sorted(os.listdir(image_path)))
 
     def get_image_data(self, session, image):
-        image_path =   f"{self.directory}/{session}/images/{image}.jpg"
-        metadata_path = f"{self.directory}/{session}/metadata/{image}.json"
+        image_path =   f"{SESSIONS_DIRECTORY}/{session}/images/{image}.jpg"
+        metadata_path = f"{SESSIONS_DIRECTORY}/{session}/metadata/{image}.json"
         assert(os.path.exists(metadata_path))
         assert(os.path.exists(image_path))
 

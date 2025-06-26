@@ -3,7 +3,7 @@ from abc import ABC
 
 import asyncio
 
-class Notifier(ABC) :
+class Publisher(ABC) :
     def __init__(self, bluetooth_server, service, characteristic):
         self.bluetooth_server = bluetooth_server
         self.service = service
@@ -24,4 +24,3 @@ class Notifier(ABC) :
             msg = await self.notif_queue.get()
             characteristic.value = msg
             result = self.bluetooth_server.update_value(self.service, self.characteristic)
-            self.logger.debug(f"Detection Notify result = {result}")

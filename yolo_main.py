@@ -2,7 +2,6 @@
 import asyncio
 import logging
 
-from control.platform import Platform
 from flow.yolo_native_flow import YoloNativeFlow
 from control.control_service import ControlService
 
@@ -41,9 +40,7 @@ def run_preview() :
 async def main() :
     logger = logging.getLogger()
 
-    platform = Platform.detect_board()
-
-    print(f"Yolo Trap starting on {platform}")
+    print(f"Yolo Trap starting")
     loop = asyncio.get_event_loop()
 
     control = ControlService(run_detection, run_preview)

@@ -2,14 +2,14 @@ import asyncio
 import logging
 
 from control.bluetooth_messages import ImageHeaderMessage, ImageSegmentMessage
-from control.notifiers.notifier import Notifier
+from control.publishers.publisher import Publisher
 from control.uuids import IMAGE_SEGMENT_UUID, SERVICE_UUID
 
-class ImageSender(Notifier) :
+class ImagePublisher(Publisher) :
     """
-    ImageSender
+    ImagePublisher
 
-    Buffered handler for sending image segments via the IMAGE_SEGMENT characteristic.
+    Buffered publisher for sending image segments via the IMAGE_SEGMENT characteristic.
 
     """
     def __init__(self, bluetooth_server):

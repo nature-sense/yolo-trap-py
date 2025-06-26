@@ -176,8 +176,8 @@ class StorageMessage:
 
     def to_proto(self):
         session_msg = session_pb2.SessionMsg()
-        storage_msg = session_pb2.Storage.Msg()
-        storage_msg.timestamp = self.timestamp
+        storage_msg = session_pb2.StorageMsg()
+        storage_msg.mounted = self.mounted
         session_msg.storage.CopyFrom(storage_msg)
         return session_msg.SerializeToString()
 
@@ -189,12 +189,15 @@ class StorageMessage:
 
 
 class SessionMessage :
+
     @staticmethod
     def from_proto(proto):
         try:
             msg = session_pb2.SessionMsg()
             msg.ParseFromString(proto)
             type = msg.WhichOneof("inner")
+
+            print(f"Message type = {type}")
 
             if type == "new_session":
                 return MsgType.NEW_SESSION, NewSessionMessage.from_proto(msg.new_session)
@@ -207,7 +210,7 @@ class SessionMessage :
             elif type == "stream_frame":
                 return MsgType.STREAM_FRAME, FrameMessage.from_proto(msg.stream_frame)
             elif type == "storage":
-                return MsgType.STORAGE,
+                return MsgType.STORAGE, StorageMessage.from_proto(msg.storage)
             else :
                 return MsgType.UNKNOWN, None
         except Exception :

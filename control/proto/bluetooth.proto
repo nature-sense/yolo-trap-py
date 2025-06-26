@@ -28,6 +28,11 @@ message  ImageMsg {
     }
 }
 
+message StateMsg {
+    int32 active_flow = 1;
+    bool storage_mounted = 2;
+}
+
 message ImageHeaderMsg {
     string session = 1;
     int32 detection = 2;
@@ -82,3 +87,10 @@ message DetectionMetadataMsg {
     int32 width = 7;
     int32 height = 8;
 }
+
+message StorageMsg {
+    bool mounted = 1;
+    string volume = 2;
+    int32 space = 3;
+}
+

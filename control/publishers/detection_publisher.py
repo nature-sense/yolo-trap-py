@@ -1,8 +1,8 @@
 from control.bluetooth_messages import DetectionMetadataMessage
-from control.notifiers.notifier import Notifier
+from control.publishers.publisher import Publisher
 from control.uuids import DETECTION_NOTIF_UUID, SERVICE_UUID
 
-class DetectionNotifier(Notifier) :
+class DetectionPublisher(Publisher) :
     def __init__(self, bluetooth_server,):
         super().__init__(bluetooth_server,  SERVICE_UUID, DETECTION_NOTIF_UUID)
 

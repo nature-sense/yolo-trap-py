@@ -3,10 +3,8 @@ import copy
 import logging
 import math
 
-from thonny.plugins.microbit.api_stubs.time import sleep
-
 from control.bluetooth_messages import FrameHeaderMessage, FrameSegmentMessage
-from control.notifiers.notifier import Notifier
+from control.publishers.publisher import Publisher
 from control.uuids import SERVICE_UUID, PREVIEW_STREAM_UUID
 
 IMAGE_SEGMENT = 400
@@ -35,7 +33,7 @@ class FrameDesc :
 
 
 
-class ImageStreamer(Notifier) :
+class StreamPublisher(Publisher) :
     def __init__(self, bluetooth_server):
         super().__init__(bluetooth_server,  SERVICE_UUID, PREVIEW_STREAM_UUID)
         self.frame_buffer = FrameBuffer()

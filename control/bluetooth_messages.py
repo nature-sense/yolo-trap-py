@@ -4,14 +4,14 @@ from control import bluetooth_pb2
 from session.detection_metadata import DetectionMetadata
 
 class ImageMsgType(Enum) :
-    IMAGE_HEADER = 1,
-    IMAGE_SEGMENT = 2,
+    IMAGE_HEADER = 1
+    IMAGE_SEGMENT = 2
     UNKNOWN = 3
 
 class SessionMsgType(Enum) :
-    NEW_SESSION = 1,
-    SESSION_DELETED = 2,
-    SESSION_DETAILS = 3,
+    NEW_SESSION = 1
+    SESSION_DELETED = 2
+    SESSION_DETAILS = 3
     UNKNOWN = 4
 
 class FrameMsgType(Enum) :
@@ -19,6 +19,10 @@ class FrameMsgType(Enum) :
     FRAME_SEGMENT = 2
     UNKNOWN = 3
 
+class ActiveFlow(Enum) :
+    NO_FLOW = 0
+    DETECT_FLOW = 1
+    PREVIEW_FLOW = 2
 
 # ========================================================================
 #                    Session Messages
@@ -244,4 +248,35 @@ class FrameSegmentMessage:
         segment_msg.data = self.data
         img_msg.segment.CopyFrom(segment_msg)
         return img_msg.SerializeToString()
+
+
+# ========================================================================
+#                        State Messages - send only
+# ========================================================================
+class StorageMessage:
+    def __init__(self, mounted, volume = None, space = None) :
+        self.mounted = mounted
+        self.volume = volume
+        self.space = space
+
+    def to_proto(self):
+        sto_msg =  bluetooth_pb2.StorageMsg
+        sto_msg.mounted = self.mounted
+        if self.volume is not None :
+            sto_msg.volume = self.volume
+        if self.space is not None:
+            sto_msg.space = self.space
+        return sto_msg.SerializeToString()
+
+class StateMessage:
+    def __init__(self, active_flow : ActiveFlow, storage_mounted) :
+
+        self.active_flow = active_flow.value
+        self.storage_mounted = storage_mounted
+
+    def to_proto(self):
+        state_msg =  bluetooth_pb2.StateMsg()
+        state_msg.active_flow = self.active_flow
+        state_msg.storage_mounted = self.storage_mounted
+        return state_msg.SerializeToString()
 

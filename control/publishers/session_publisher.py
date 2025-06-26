@@ -2,10 +2,10 @@ import asyncio
 import logging
 
 from control.bluetooth_messages import NewSessionMessage, DeleteSessionMessage, SessionDetailsMessage
-from control.notifiers.notifier import Notifier
+from control.publishers.publisher import Publisher
 from control.uuids import SESSION_NOTIF_UUID, SERVICE_UUID
 
-class SessionNotifier(Notifier) :
+class SessionPublisher(Publisher) :
     def __init__(self, bluetooth_server):
         super().__init__(bluetooth_server,  SERVICE_UUID, SESSION_NOTIF_UUID)
 
