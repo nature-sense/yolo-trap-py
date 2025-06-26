@@ -5,9 +5,9 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=/home/steve/yolo-trap-py
-ExecStart=python yolo-main.py
 Restart=on-failure
 User=steve
+ExecStart=/home/steve/yolo-trap-py/start.sh
 Group=steve
 
 [Install]
