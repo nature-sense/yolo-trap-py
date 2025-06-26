@@ -1,0 +1,14 @@
+[Unit]
+Description=My Yolo Trap
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/steve/yolo-trap-py
+ExecStart=python yolo-main.py
+Restart=on-failure
+User=steve
+Group=steve
+
+[Install]
+WantedBy=multi-user.target
