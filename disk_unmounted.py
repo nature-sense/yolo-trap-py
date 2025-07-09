@@ -9,7 +9,9 @@ if __name__ == "__main__":
     msg = StorageMessage(False).to_proto()
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((IP_ADDRESS, PORT))
-        s.sendall(msg)
-
+        try:
+            s.connect((IP_ADDRESS, PORT))
+            s.sendall(msg)
+        except socket.error:
+            pass
 
