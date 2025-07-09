@@ -1,0 +1,2 @@
+ /usr/bin/pmount --umask 000 --noatime -w --sync $1 usb1
+python /home/trap/disk_mounted.py

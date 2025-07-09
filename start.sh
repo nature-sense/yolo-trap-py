@@ -1,3 +1,3 @@
 #!/bin/bash
-source /home/steve/.venv/bin/activate
+source /home/trap/.venv/bin/activate
 python yolo_main.py

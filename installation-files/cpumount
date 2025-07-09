@@ -1,0 +1,2 @@
+ /usr/bin/pumount /dev/usb1
+ python /home/trap/disk_unmounted.py
