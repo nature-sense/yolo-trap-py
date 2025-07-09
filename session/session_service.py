@@ -27,7 +27,7 @@ from session.detection_metadata import DetectionMetadata
 from session.ipc import IpcServer
 from session.session_messages import SessionMessage, MsgType
 
-STORAGE_DIRECTORY = "/media/usb"
+STORAGE_DIRECTORY = "/media/usb1"
 SESSIONS_DIRECTORY = STORAGE_DIRECTORY +"/sessions"
 
 class SessionCache:
@@ -200,8 +200,10 @@ class SessionService:
                 self.session_cache.set_detection(self.current_session, meta)
                 metadata_file = str(f"{self.metadata_dir}/{meta.detection}.json")
                 with open(metadata_file, 'w') as file:
-                    file.write(json.dumps(object_to_json(meta)))
-
+                    try :
+                        file.write(json.dumps(object_to_json(meta)))
+                    except :
+                        self.logger.debug("Failed to save metadata")
 
         # ==================================================================
         # UPDATE_DETECTION
