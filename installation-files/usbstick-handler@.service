@@ -6,5 +6,5 @@ After=dev-%i.device
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/usr/local/bin/cpmount
-ExecStop=/usr/local/bin/cpumount
+ExecStart=/usr/local/bin/cpmount /dev/%I
+ExecStop=/usr/local/bin/cpumount /dev/%I
