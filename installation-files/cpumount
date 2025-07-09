@@ -1,4 +1,3 @@
  #!/bin/bash
- echo $1
  /usr/bin/pumount $1
  python /home/trap/disk_unmounted.py
