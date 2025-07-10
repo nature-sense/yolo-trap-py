@@ -13,3 +13,5 @@ IMAGE_SEGMENT_UUID        = "8bf01881-cfbe-48b2-aca6-f7f25c796943"
 FLOW_SET_UUID             = "1027c4db-92f5-40ed-9a2d-25d53844d81c"
 STATE_REQ_UUID            = "f4a6c1ed-86ff-4c01-932f-7c810dc66b43"
 STATE_NOTIF_UUID          = "facee39c-23f6-416e-8d03-e380f4e94b3e"
+
+KEEP_ALIVE_UUID           = "5c4f3c66-44a9-4c5c-95a1-7a3a3b5f71bd"

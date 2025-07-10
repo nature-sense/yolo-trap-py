@@ -2,7 +2,6 @@ import asyncio
 import logging
 import math
 import os
-from multiprocessing import Process
 from typing import Any
 
 from bless import (
@@ -24,7 +23,7 @@ from control.publishers.stream_publisher import StreamPublisher
 from control.publishers.session_publisher import SessionPublisher
 from control.uuids import SERVICE_UUID, SESSION_LIST_REQ_UUID, SESSION_NOTIF_UUID, DETECTIONS_LIST_REQ_UUID, \
     DETECTION_NOTIF_UUID, IMAGE_REQ_UUID, IMAGE_SEGMENT_UUID, PREVIEW_STREAM_UUID, \
-    STATE_NOTIF_UUID, STATE_REQ_UUID, FLOW_SET_UUID
+    STATE_NOTIF_UUID, STATE_REQ_UUID, FLOW_SET_UUID, KEEP_ALIVE_UUID
 
 from session.session_service import SessionService
 
@@ -95,6 +94,8 @@ class ControlService:
         await self.add_read_write_char(IMAGE_REQ_UUID, bin(0))
         await self.add_notif_char(IMAGE_SEGMENT_UUID, bin(0))
 
+        await self.add_notif_char(KEEP_ALIVE_UUID, bin(0))
+
         self.state_controller = StateController(self.detector, self.previewer, self.bluetooth_server)
         self.session_server = SessionService(MAX_SESSIONS, self)
 
@@ -104,6 +105,9 @@ class ControlService:
         await self.image_streamer.start()
         await self.session_server.start_service()
         await self.bluetooth_server.start()
+
+        task = asyncio.create_task(self.keep_alive_task())
+        self.background_tasks.add(task)
 
         self.logger.debug("Advertising")
         await self.trigger.wait()
@@ -158,6 +162,13 @@ class ControlService:
         for detection in detections:
             self.logger.debug(f"Notifying detection = {detection}")
             await self.detection_notifier.notify_detection_meta(detections[detection])
+
+    async def keep_alive_task(self):
+        while True:
+            self.logger.debug("KEEP ALIVE")
+
+            result = self.bluetooth_server.update_value(SERVICE_UUID, KEEP_ALIVE_UUID)
+            await asyncio.sleep(15)
 
     async def segmented_image_task(self, session, detection):
         """
