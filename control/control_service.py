@@ -48,6 +48,8 @@ class ControlService:
         self.detector = detector # detector flow
         self.previewer = previewer # preview flow
 
+        self.image_queue = asyncio.Queue()
+
         self.session_server = None
         self.process = None
         self.bluetooth_server = None
@@ -144,6 +146,7 @@ class ControlService:
         elif characteristic.uuid == IMAGE_REQ_UUID:
             req = DetectionReferenceMessage.from_proto(value)
             self.logger.debug(f"Request image {req.session, req.detection}")
+
             task = asyncio.create_task(self.segmented_image_task(req.session, req.detection))
             self.background_tasks.add(task)
             task.add_done_callback(self.background_tasks.discard)
@@ -171,6 +174,9 @@ class ControlService:
             await asyncio.sleep(15)
 
     async def segmented_image_task(self, session, detection):
+
+        self.logger.debug(f"Image request {session} {detection}")
+
         """
         Segment a detection image and sent the parts via the 'image_sender'
         """

@@ -34,5 +34,7 @@ sudo systemctl enable yolotrap.service
 
 sudo sed '/bluetoothd/s/bluetoothd/bluetoothd -P battery/'  /etc/systemd/system/dbus-org.bluez.service
 
+sudo reboot
+
 
 

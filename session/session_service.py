@@ -69,7 +69,8 @@ class SessionCache:
 
 class SessionService:
     def __init__(self, max_sessions, control_service):
-        self.logger = logging.getLogger()
+        logging.basicConfig(level=logging.DEBUG)
+        self.logger = logging.getLogger(name=__name__)
         self.session_cache = SessionCache()
         self.ipc_server = IpcServer(self)
         self.max_sessions = max_sessions
