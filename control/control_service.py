@@ -168,7 +168,7 @@ class ControlService:
 
     async def keep_alive_task(self):
         while True:
-            self.logger.debug("KEEP ALIVE")
+            #self.logger.debug("KEEP ALIVE")
 
             result = self.bluetooth_server.update_value(SERVICE_UUID, KEEP_ALIVE_UUID)
             await asyncio.sleep(15)

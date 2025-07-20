@@ -23,6 +23,7 @@ class StateController:
         self.process = None
 
     def get_state(self):
+        self.logger.debug(f"Get state")
         msg = StateMessage(self.current_flow, self.storage_mounted)
         self.state_char.value = msg.to_proto()
         result = self.bluetooth_server.update_value(SERVICE_UUID, STATE_NOTIF_UUID)

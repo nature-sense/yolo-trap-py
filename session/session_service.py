@@ -87,13 +87,16 @@ class SessionService:
         asyncio.create_task(self.ipc_server.run_server())
 
     def check_storage(self):
+        self.logger.debug("Checking storage")
+
         if os.path.exists(STORAGE_DIRECTORY) :
             if not os.path.exists(SESSIONS_DIRECTORY):
                 os.makedirs(SESSIONS_DIRECTORY)
             self.build_cache()
+            self.logger.debug("Storage found")
             self.control_service.state_controller.set_storage_state(True)
-            # nounted and ready to go
         else:
+            self.logger.debug("No storage found")
             self.control_service.state_controller.set_storage_state(False)
 
     def build_cache(self):
