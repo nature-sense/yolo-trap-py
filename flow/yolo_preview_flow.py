@@ -24,14 +24,15 @@ class YoloPreviewFlow(StreamFlow):
         )
 
         self.picam2.configure(camera_config)
-       # self.picam2.set_controls({"AfMode": controls.AfModeEnum.Continuous})
-       # self.picam2.set_controls({"AfRange": controls.AfRangeEnum.Macro})
+        self.picam2.set_controls({"AfMode": controls.AfModeEnum.Continuous})
+        #self.picam2.set_controls({"AfRange": controls.AfRangeEnum.Macro})
        # self.picam2.set_controls({"AfSpeed": controls.AfSpeedEnum.Fast})
 
 
         #self.picam2.set_controls({"AfMode": controls.AfModeEnum.Manual, "LensPosition": 0})  # 2.0})
         self.picam2.start(camera_config)
-
+        success = self.picam2.autofocus_cycle()
+        print("autofocus result ", success)
         while True:
             request = self.picam2.capture_request()
             current_datetime = datetime.now()

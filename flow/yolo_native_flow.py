@@ -30,9 +30,15 @@ class YoloNativeFlow(DetectFlow):
         )
 
         self.picam2.configure(camera_config)
-        #self.picam2.set_controls({"AfMode": controls.AfModeEnum.Continuous})
+        self.picam2.set_controls({"AfMode": controls.AfModeEnum.Continuous})
+        self.picam2.video_configuration.controls.FrameRate = 10.0
+        #self.picam2.set_controls({"AfRange": controls.AfRangeEnum.Macro})
         #self.picam2.set_controls({"AfMode": controls.AfModeEnum.Manual, "LensPosition": 0})  # 2.0})
         self.picam2.start(camera_config)
+        success = False
+        while not success:
+            success = self.picam2.autofocus_cycle()
+            print("autofocus result ", success)
 
         while True:
             start_frame = time.perf_counter()
