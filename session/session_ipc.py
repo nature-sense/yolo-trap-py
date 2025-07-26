@@ -1,36 +1,28 @@
-import asyncio
 import zmq
 import zmq.asyncio
 
+IP_ADDRESS = "127.0.0.1"
+PORT = 1337
 
-
-class ZmqIpcServer:
+class SessionIpcServer:
     def __init__(self, session_server):
         self.session_server = session_server
         self.ctx = zmq.asyncio.Context()
 
+    async def server_task(self):
+        sock = self.ctx.socket(zmq.PAIR)
+        sock.bind(f"tcp://{IP_ADDRESS}:{PORT}")
+        while True:
+            data = await sock.recv()  # waits for msg to be ready
+
+            await self.session_server.handle_message(data)
 
 
-    async def run_server(self):
-        self.server.bind((IP_ADDRESS, PORT))
-        self.server.listen(1)
-        self.server.setblocking(False)
+class SessionIpcClient:
+    def __init__(self):
+        self.ctx = zmq.asyncio.Context()
+        self.sock = self.ctx.socket(zmq.PAIR)
+        self.sock.connect(f"tcp://{IP_ADDRESS}:{PORT}")
 
-        while True :
-            client_socket, _ = await self.loop.sock_accept(self.server)
-            while True:
-                try:
-                    data = await self.loop.sock_recv(client_socket, 131072)
-                    if not data:
-                        break
-                    await self.session_server.handle_message(data)
-                    #print(f"Received: {data.decode()}")
-                except ConnectionResetError:
-                    break
-            client_socket.close()
-            #break
-
-
-
-
-
+    def send(self, data):
+        self.sock.send(data)

@@ -94,3 +94,12 @@ message StorageMsg {
     int32 space = 3;
 }
 
+message SettingsMsg {
+  string trapname = 1;
+  string wifi_ssid = 2;
+  string wifi_password = 3;
+  string wifi_enabled = 4;
+  int32 max_sessions = 5;
+  float min_score = 6;
+}
+

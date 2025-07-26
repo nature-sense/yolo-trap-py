@@ -24,7 +24,7 @@ from strong_typing.serialization import json_to_object
 from strong_typing.serializer import object_to_json
 
 from session.detection_metadata import DetectionMetadata
-from session.ipc import IpcServer
+from session.session_ipc import SessionIpcServer
 from session.session_messages import SessionMessage, MsgType
 
 STORAGE_DIRECTORY = "/media/usb1"
@@ -72,7 +72,7 @@ class SessionService:
         logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger(name=__name__)
         self.session_cache = SessionCache()
-        self.ipc_server = IpcServer(self)
+        self.ipc_server = SessionIpcServer(self)
         self.max_sessions = max_sessions
         self.control_service = control_service
 
@@ -84,7 +84,7 @@ class SessionService:
         self.check_storage()
 
     async def start_service(self)  :
-        asyncio.create_task(self.ipc_server.run_server())
+        asyncio.create_task(self.ipc_server.server_task())
 
     def check_storage(self):
         self.logger.debug("Checking storage")

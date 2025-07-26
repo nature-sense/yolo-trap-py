@@ -9,7 +9,8 @@ from flow.yolo_preview_flow import YoloPreviewFlow
 
 #YOLO_MODEL = "/home/aidev/yolo-trap-py/models/best.pt"
 #IMX_MODEL = "/home/aidev/yolo-trap-py/models/network.rpk"
-NCNN_MODEL = "./models/best_ncnn_model"
+#NCNN_MODEL = "./models/insects_320_ncnn_model"
+NCNN_MODEL = "./models/insects_320_ncnn_model"
 
 SESSIONS_DIRECTORY = "./sessions"
 MAX_TRACKING = 10
@@ -17,8 +18,11 @@ CACHE_SIZE = 20
 MIN_SCORE = 0.5
 
 MAIN_SIZE = (2028, 1520)
+#MAIN_SIZE = (4608, 2592)
+
 LORES_SIZE = (320,320)
-#PREVIEW_SIZE = (640,480)
+#LORES_SIZE = (640,640)
+
 PREVIEW_SIZE = (320,240)
 
 def run_detection() :

@@ -2,6 +2,8 @@ from enum import Enum
 
 from control import bluetooth_pb2
 from session.detection_metadata import DetectionMetadata
+from settings.settings import Settings
+
 
 class ImageMsgType(Enum) :
     IMAGE_HEADER = 1
@@ -280,3 +282,37 @@ class StateMessage:
         state_msg.storage_mounted = self.storage_mounted
         return state_msg.SerializeToString()
 
+# ========================================================================
+#                 Settings Messages - send only
+# ========================================================================
+class SettingsMessage :
+    def __init__(self, trap_name, eifi_ssid, wifi_password, wifi_enabled, max_sessions, min_score):
+        self.trap_name = trap_name
+        self.eifi_ssid = eifi_ssid
+        self.wifi_password = wifi_password
+        self.wifi_enabled = wifi_enabled
+        self.max_sessions = max_sessions
+        self.min_score = min_score
+
+    def to_proto(self):
+        setngs_msg = bluetooth_pb2.SettingsMsg()
+        setngs_msg.trap_name = self.trap_name
+        setngs_msg.eifi_ssid = self.eifi_ssid
+        setngs_msg.wifi_password = self.wifi_password
+        setngs_msg.wifi_enabled = self.wifi_enabled
+        setngs_msg.max_sessions = self.max_sessions
+        setngs_msg.min_score = self.min_score
+        return setngs_msg.SerializeToString()
+
+    @staticmethod
+    def from_proto(proto):
+        msg = bluetooth_pb2.SettingsMsg()
+        msg.ParseFromString(proto)
+        return Settings(
+            msg.trap_name,
+            msg.eifi_ssid,
+            msg.wifi_password,
+            msg.wifi_enabled,
+            msg.max_sessions,
+            msg.min_score
+        )

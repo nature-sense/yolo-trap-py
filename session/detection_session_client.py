@@ -1,4 +1,4 @@
-from session.ipc import IpcClient
+from session.session_ipc import SessionIpcClient
 from session.session_messages import NewSessionMessage, NewDetectionMessage, UpdateDetectionMessage, UpdateDetectionMetaMessage
 
 
@@ -36,7 +36,7 @@ class DetectionSessionClient:
     def __init__(self, size, session):
         self.session = session
         self.cache = FixedSizeMap(size)
-        self.ipc = IpcClient()
+        self.ipc = SessionIpcClient()
 
         # Send the NEW_SESSION message
         msg = NewSessionMessage(self.session).to_proto()

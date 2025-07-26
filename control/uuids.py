@@ -15,3 +15,6 @@ STATE_REQ_UUID            = "f4a6c1ed-86ff-4c01-932f-7c810dc66b43"
 STATE_NOTIF_UUID          = "facee39c-23f6-416e-8d03-e380f4e94b3e"
 
 KEEP_ALIVE_UUID           = "5c4f3c66-44a9-4c5c-95a1-7a3a3b5f71bd"
+
+SET_SETTINGS_UUID         = "826fc667-b9fb-4ad3-bbe5-607c5db043d0"
+GET_SETTINGS_UUID         = "affecaa7-2284-41a3-b8cd-8cdc218b8937"
