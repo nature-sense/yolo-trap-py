@@ -26,6 +26,7 @@ pip install thonny
 pip install numpy==1.26.4
 pip install lap
 pip install gpiozero
+pip install pyzmq
 
 sudo cp installation-files/usbstick.rules /etc/udev/rules.d/
 sudo cp installation-files/usbstick-handler@.service /lib/systemd/system/

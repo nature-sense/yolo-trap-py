@@ -1,6 +1,7 @@
 
 import asyncio
 import logging
+from multiprocessing import Process
 
 from flow.yolo_native_flow import YoloNativeFlow
 from control.control_service import ControlService
@@ -41,14 +42,23 @@ def run_preview() :
     )
     yolo_preview_flow.stream_task()
 
-async def main() :
+def main() :
     logger = logging.getLogger()
 
     print(f"Yolo Trap starting")
-    loop = asyncio.get_event_loop()
+    process = Process(target=run_asyncio_in_process(), args=())
+    process.start()
+    process.join()
 
+def run_asyncio_in_process():
+    loop = asyncio.get_event_loop()
+    result = loop.run_until_complete(control_task())
+    loop.close()
+    return result
+
+async def control_task() :
     control = ControlService(run_detection, run_preview)
-    await control.run(loop)
+    await control.run()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

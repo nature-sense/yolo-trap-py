@@ -64,11 +64,12 @@ class ControlService:
         self.background_tasks = set()
 
 
-    async def run(self, loop):
+    async def run(self):
         self.trigger.clear()
 
         # Instantiate the server
         service_name = self.node_name
+        loop = asyncio.get_running_loop()
         self.bluetooth_server = BlessServer(name=service_name, loop=loop)
 
         self.bluetooth_server.read_request_func = self.read_request
