@@ -1,9 +1,6 @@
-import asyncio
-import logging
-
-from control.bluetooth_messages import ImageHeaderMessage, ImageSegmentMessage
-from control.publishers.publisher import Publisher
-from control.uuids import IMAGE_SEGMENT_UUID, SERVICE_UUID
+from control_process.bluetooth_messages import ImageHeaderMessage, ImageSegmentMessage
+from control_process.publishers.publisher import Publisher
+from control_process.uuids import IMAGE_SEGMENT_UUID, SERVICE_UUID
 
 class ImagePublisher(Publisher) :
     """

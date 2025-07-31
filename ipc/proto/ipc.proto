@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package session;
+package ipc;
 
 message SessionMsg {
      oneof inner {
@@ -10,6 +10,7 @@ message SessionMsg {
          UpdateDetectionMsg update_detection = 4;
          FrameMsg stream_frame = 5;
          StorageMsg storage = 6;
+         ActiveFlowMsg active_flow = 7;
      }
 }
 
@@ -48,4 +49,18 @@ message FrameMsg {
 
 message StorageMsg {
     bool mounted = 1;
+}
+
+message ActiveFlowMsg {
+    int32 flow = 1;
+}
+
+message ControlMsg {
+    oneof inner {
+        SetActiveFlowMsg set_flow = 1;
+    }
+}
+
+message SetActiveFlowMsg {
+    int32 flow = 1;
 }

@@ -3,9 +3,9 @@ import copy
 import logging
 import math
 
-from control.bluetooth_messages import FrameHeaderMessage, FrameSegmentMessage
-from control.publishers.publisher import Publisher
-from control.uuids import SERVICE_UUID, PREVIEW_STREAM_UUID
+from control_process.bluetooth_messages import FrameHeaderMessage, FrameSegmentMessage
+from control_process.publishers.publisher import Publisher
+from control_process.uuids import SERVICE_UUID, PREVIEW_STREAM_UUID
 
 IMAGE_SEGMENT = 400
 

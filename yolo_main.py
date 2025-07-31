@@ -1,64 +1,23 @@
-
 import asyncio
 import logging
-from multiprocessing import Process
 
-from flow.yolo_native_flow import YoloNativeFlow
-from control.control_service import ControlService
+from aiomultiprocess import Process, Pool
 
-from flow.yolo_preview_flow import YoloPreviewFlow
+from camera_process.process import CameraProcess
+from control_process.process import ControlProcess
 
-#YOLO_MODEL = "/home/aidev/yolo-trap-py/models/best.pt"
-#IMX_MODEL = "/home/aidev/yolo-trap-py/models/network.rpk"
-#NCNN_MODEL = "./models/insects_320_ncnn_model"
-NCNN_MODEL = "./models/insects_320_ncnn_model"
+def setup_logging(level=logging.DEBUG):
+    logging.basicConfig(level=level)
 
-SESSIONS_DIRECTORY = "./sessions"
-MAX_TRACKING = 10
-CACHE_SIZE = 20
-MIN_SCORE = 0.5
-
-MAIN_SIZE = (2028, 1520)
-#MAIN_SIZE = (4608, 2592)
-
-LORES_SIZE = (320,320)
-#LORES_SIZE = (640,640)
-
-PREVIEW_SIZE = (320,240)
-
-def run_detection() :
-    yolo_detect_flow = YoloNativeFlow(
-        min_score=0.5,
-        lores_size=LORES_SIZE,
-        main_size=MAIN_SIZE,
-        max_tracking=MAX_TRACKING,
-        model=NCNN_MODEL
-    )
-    yolo_detect_flow.flow_task()
-
-def run_preview() :
-    yolo_preview_flow = YoloPreviewFlow(
-        main_size=PREVIEW_SIZE,
-    )
-    yolo_preview_flow.stream_task()
-
-def main() :
+async def main() :
     logger = logging.getLogger()
 
-    print(f"Yolo Trap starting")
-    process = Process(target=run_asyncio_in_process(), args=())
-    process.start()
-    process.join()
-
-def run_asyncio_in_process():
-    loop = asyncio.get_event_loop()
-    result = loop.run_until_complete(control_task())
-    loop.close()
-    return result
-
-async def control_task() :
-    control = ControlService(run_detection, run_preview)
-    await control.run()
+    control_process = Process(target=ControlProcess().start_services, initializer=setup_logging)
+    control_process.start()
+    camera_process = Process(target=CameraProcess().start_services, initializer=setup_logging)
+    camera_process.start()
+    await control_process.join()
+    await camera_process.join()
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

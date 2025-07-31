@@ -1,6 +1,6 @@
-from control.bluetooth_messages import DetectionMetadataMessage
-from control.publishers.publisher import Publisher
-from control.uuids import DETECTION_NOTIF_UUID, SERVICE_UUID
+from control_process.bluetooth_messages import DetectionMetadataMessage
+from control_process.publishers.publisher import Publisher
+from control_process.uuids import DETECTION_NOTIF_UUID, SERVICE_UUID
 
 class DetectionPublisher(Publisher) :
     def __init__(self, bluetooth_server,):

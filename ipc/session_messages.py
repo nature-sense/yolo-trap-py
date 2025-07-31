@@ -1,12 +1,5 @@
 #!/usr/bin/env python
-"""
-Python wrappers for the Session Protocol-buffer messages.
-"""
-__author__ = "Steve"
-__contact__ = "steve@naturesense.io"
-__copyright__ = "Copyright 2025, NatureSense"
-
-from session import session_pb2
+from ipc import ipc_pb2
 from enum import Enum
 
 
@@ -16,8 +9,9 @@ class MsgType(Enum) :
     UPDATE_DETECTION_META = 3,
     UPDATE_DETECTION = 4,
     STREAM_FRAME = 5,
-    STORAGE = 6.
-    UNKNOWN = 7
+    STORAGE = 6,
+    ACTIVE_FLOW = 7,
+    UNKNOWN = 8
 
 class NewSessionMessage :
 
@@ -25,15 +19,15 @@ class NewSessionMessage :
         self.session = session
 
     def to_proto(self):
-        session_msg = session_pb2.SessionMsg()
-        new_msg = session_pb2.NewSessionMsg()
+        session_msg = ipc_pb2.SessionMsg()
+        new_msg = ipc_pb2.NewSessionMsg()
         new_msg.session = self.session
         session_msg.new_session.CopyFrom(new_msg)
         return session_msg.SerializeToString()
 
     @staticmethod
     def from_proto(msg):
-        #msg = session_pb2.NewSessionMsg()
+        #msg = ipc_pb2.NewSessionMsg()
         #msg.ParseFromString(proto)
         return NewSessionMessage(msg.session)
 
@@ -61,8 +55,8 @@ class NewDetectionMessage :
         )
 
     def to_proto(self):
-        session_msg = session_pb2.SessionMsg()
-        new_detect_msg = session_pb2.NewDetectionMsg()
+        session_msg = ipc_pb2.SessionMsg()
+        new_detect_msg = ipc_pb2.NewDetectionMsg()
         new_detect_msg.detection = self.detection
         new_detect_msg.created = self.created
         new_detect_msg.score = self.score
@@ -95,8 +89,8 @@ class UpdateDetectionMetaMessage :
         return UpdateDetectionMetaMessage(detection_metadata.detection, detection_metadata.updated)
 
     def to_proto(self):
-        session_msg = session_pb2.SessionMsg()
-        upd_detect_meta_msg = session_pb2.UpdateDetectionMetaMsg()
+        session_msg = ipc_pb2.SessionMsg()
+        upd_detect_meta_msg = ipc_pb2.UpdateDetectionMetaMsg()
         upd_detect_meta_msg.detection = self.detection
         upd_detect_meta_msg.updated = self.updated
         session_msg.update_detection_meta.CopyFrom(upd_detect_meta_msg)
@@ -128,8 +122,8 @@ class UpdateDetectionMessage :
         )
 
     def to_proto(self):
-        session_msg = session_pb2.SessionMsg()
-        upd_detect_msg = session_pb2.UpdateDetectionMsg()
+        session_msg = ipc_pb2.SessionMsg()
+        upd_detect_msg = ipc_pb2.UpdateDetectionMsg()
         upd_detect_msg.detection = self.detection
         upd_detect_msg.updated = self.updated
         upd_detect_msg.score = self.score
@@ -156,8 +150,8 @@ class FrameMessage :
         self.frame = frame
 
     def to_proto(self):
-        session_msg = session_pb2.SessionMsg()
-        prev_frm_msg = session_pb2.FrameMsg()
+        session_msg = ipc_pb2.SessionMsg()
+        prev_frm_msg = ipc_pb2.FrameMsg()
         prev_frm_msg.timestamp = self.timestamp
         prev_frm_msg.frame = self.frame
         session_msg.stream_frame.CopyFrom(prev_frm_msg)
@@ -175,8 +169,8 @@ class StorageMessage:
         self.mounted = mounted
 
     def to_proto(self):
-        session_msg = session_pb2.SessionMsg()
-        storage_msg = session_pb2.StorageMsg()
+        session_msg = ipc_pb2.SessionMsg()
+        storage_msg = ipc_pb2.StorageMsg()
         storage_msg.mounted = self.mounted
         session_msg.storage.CopyFrom(storage_msg)
         return session_msg.SerializeToString()
@@ -187,13 +181,44 @@ class StorageMessage:
             msg.mounted
         )
 
+class StorageMessage:
+    def __init__(self, mounted):
+        self.mounted = mounted
+
+    def to_proto(self):
+        session_msg = ipc_pb2.SessionMsg()
+        storage_msg = ipc_pb2.StorageMsg()
+        storage_msg.mounted = self.mounted
+        session_msg.storage.CopyFrom(storage_msg)
+        return session_msg.SerializeToString()
+
+    @staticmethod
+    def from_proto(msg):
+        return StorageMessage(
+            msg.mounted
+        )
+
+class ActiveFlowMessage:
+    def __init__(self, flow):
+        self.flow = flow
+
+    def to_proto(self):
+        session_msg = ipc_pb2.SessionMsg()
+        flow_msg = ipc_pb2.ActiveFlowMsg()
+        flow_msg.flow = self.flow.value
+        session_msg.active_flow.CopyFrom(flow_msg)
+        return session_msg.SerializeToString()
+
+    @staticmethod
+    def from_proto(msg):
+        return ActiveFlowMessage(msg.flow)
 
 class SessionMessage :
 
     @staticmethod
     def from_proto(proto):
         try:
-            msg = session_pb2.SessionMsg()
+            msg = ipc_pb2.SessionMsg()
             msg.ParseFromString(proto)
             type = msg.WhichOneof("inner")
 
@@ -211,6 +236,8 @@ class SessionMessage :
                 return MsgType.STREAM_FRAME, FrameMessage.from_proto(msg.stream_frame)
             elif type == "storage":
                 return MsgType.STORAGE, StorageMessage.from_proto(msg.storage)
+            elif type == "active_flow":
+                return MsgType.ACTIVE_FLOW, ActiveFlowMessage.from_proto(msg.active_flow)
             else :
                 return MsgType.UNKNOWN, None
         except Exception :

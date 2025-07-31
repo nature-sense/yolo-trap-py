@@ -2,6 +2,7 @@ import asyncio
 import logging
 import math
 import os
+
 from typing import Any
 
 from bless import (
@@ -11,21 +12,22 @@ from bless import (
     GATTAttributePermissions,
 )
 
-from control.bluetooth_messages import (
+from control_process.bluetooth_messages import (
     DetectionReferenceMessage,
-    DetectionsForSessionMessage, ActiveFlow
+    DetectionsForSessionMessage
 )
-from control.state_controller import StateController
+from control_process.state_controller import StateController
+from ipc.active_flow import ActiveFlow
 
-from control.publishers.detection_publisher import DetectionPublisher
-from control.publishers.image_publisher import ImagePublisher
-from control.publishers.stream_publisher import StreamPublisher
-from control.publishers.session_publisher import SessionPublisher
-from control.uuids import SERVICE_UUID, SESSION_LIST_REQ_UUID, SESSION_NOTIF_UUID, DETECTIONS_LIST_REQ_UUID, \
+from control_process.publishers.detection_publisher import DetectionPublisher
+from control_process.publishers.image_publisher import ImagePublisher
+from control_process.publishers.stream_publisher import StreamPublisher
+from control_process.publishers.session_publisher import SessionPublisher
+from control_process.uuids import SERVICE_UUID, SESSION_LIST_REQ_UUID, SESSION_NOTIF_UUID, DETECTIONS_LIST_REQ_UUID, \
     DETECTION_NOTIF_UUID, IMAGE_REQ_UUID, IMAGE_SEGMENT_UUID, PREVIEW_STREAM_UUID, \
     STATE_NOTIF_UUID, STATE_REQ_UUID, FLOW_SET_UUID, KEEP_ALIVE_UUID
 
-from session.session_service import SessionService
+#from control_process.session_manager import SessionManager
 
 YOLO_MODEL = "/home/aidev/yolo-trap-py/models/best.pt"
 IMX_MODEL = "/home/aidev/yolo-trap-py/models/network.rpk"
@@ -39,19 +41,20 @@ IMAGE_SEGMENT = 200
 MAIN_SIZE = (2028, 1520)
 LORES_SIZE = (320,320)
 
-class ControlService:
-    def __init__(self, detector, previewer) -> None:
+class BluetoothController:
+    def __init__(self, session_manager, ipc_server) -> None:
         logging.basicConfig(level=logging.DEBUG)
 
         self.trigger = asyncio.Event()
         self.logger = logging.getLogger(name=__name__)
-        self.detector = detector # detector flow
-        self.previewer = previewer # preview flow
+        #self.detector = detector # detector flow
+        #self.previewer = previewer # preview flow
 
         self.image_queue = asyncio.Queue()
 
-        self.session_server = None
-        self.process = None
+        self.session_manager = session_manager
+        self.ipc_server = ipc_server
+
         self.bluetooth_server = None
         self.session_notifier = None
         self.detection_notifier = None
@@ -64,7 +67,7 @@ class ControlService:
         self.background_tasks = set()
 
 
-    async def run(self):
+    async def bluetooth_task(self):
         self.trigger.clear()
 
         # Instantiate the server
@@ -99,24 +102,24 @@ class ControlService:
 
         await self.add_notif_char(KEEP_ALIVE_UUID, bin(0))
 
-        self.state_controller = StateController(self.detector, self.previewer, self.bluetooth_server)
-        self.session_server = SessionService(MAX_SESSIONS, self)
+        self.state_controller = StateController(self.ipc_server, self.bluetooth_server)
 
         await self.session_notifier.start()
         await self.detection_notifier.start()
         await self.image_sender.start()
         await self.image_streamer.start()
-        await self.session_server.start_service()
         await self.bluetooth_server.start()
 
         task = asyncio.create_task(self.keep_alive_task())
         self.background_tasks.add(task)
 
-        self.logger.debug("Advertising")
+        self.session_manager.check_storage()
+
+        logging.debug("Advertising")
         await self.trigger.wait()
 
     def read_request(self, characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
-        self.logger.debug(f"Reading {characteristic.value}")
+        print(f"Reading {characteristic.value}")
 
         #if characteristic.uuid == STATE_REQ_UUID:
         #    characteristic.value = self.state_controller.get_state_proto()
@@ -124,29 +127,29 @@ class ControlService:
 
     def write_request(self, characteristic: BlessGATTCharacteristic, value: Any, **kwargs):
         if characteristic.uuid == STATE_REQ_UUID:
-            self.logger.debug("Request trap-state")
+            logging.debug("Request trap-state")
             self.state_controller.get_state()
 
         elif characteristic.uuid == FLOW_SET_UUID:
-            self.logger.debug("Request set-flow")
+            logging.debug("Request set-flow")
             self.state_controller.set_flow(ActiveFlow(value[0]))
 
         elif characteristic.uuid == SESSION_LIST_REQ_UUID:
-            self.logger.debug("Request session list")
+            logging.debug("Request session list")
             task = asyncio.create_task(self.session_list_task())
             self.background_tasks.add(task)
             task.add_done_callback(self.background_tasks.discard)
 
         elif characteristic.uuid == DETECTIONS_LIST_REQ_UUID:
             session = DetectionsForSessionMessage.from_proto(value).session
-            self.logger.debug(f"Request detections list {session}")
+            logging.debug(f"Request detections list {session}")
             task = asyncio.create_task(self.detections_list_task(session))
             self.background_tasks.add(task)
             task.add_done_callback(self.background_tasks.discard)
 
         elif characteristic.uuid == IMAGE_REQ_UUID:
             req = DetectionReferenceMessage.from_proto(value)
-            self.logger.debug(f"Request image {req.session, req.detection}")
+            logging.debug(f"Request image {req.session, req.detection}")
 
             task = asyncio.create_task(self.segmented_image_task(req.session, req.detection))
             self.background_tasks.add(task)
@@ -154,17 +157,17 @@ class ControlService:
 
 
     async def session_list_task(self):
-        self.logger.debug("Session list")
-        sessions = self.session_server.list_sessions()
+        logging.debug("Session list")
+        sessions = self.session_manager.list_sessions()
         for session in sessions:
             self.logger.debug(f"Updating Session = {session}")
             await self.session_notifier.notify_session_details(session[0], session[1])
 
     async def detections_list_task(self, session):
-        self.logger.debug("Detections list")
-        detections = self.session_server.list_detections_for_session(session)
+        logging.debug("Detections list")
+        detections = self.session_manager.list_detections_for_session(session)
         for detection in detections:
-            self.logger.debug(f"Notifying detection = {detection}")
+            logging.debug(f"Notifying detection = {detection}")
             await self.detection_notifier.notify_detection_meta(detections[detection])
 
     async def keep_alive_task(self):
@@ -176,12 +179,12 @@ class ControlService:
 
     async def segmented_image_task(self, session, detection):
 
-        self.logger.debug(f"Image request {session} {detection}")
+        logging.debug(f"Image request {session} {detection}")
 
         """
         Segment a detection image and sent the parts via the 'image_sender'
         """
-        meta, img = self.session_server.get_image_data(session, detection)
+        meta, img = self.session_manager.get_image_data(session, detection)
         segments = math.ceil(len(img) / IMAGE_SEGMENT)
 
         #Send the header
@@ -200,7 +203,7 @@ class ControlService:
             img_seg = img[start_index:]
             await self.image_sender.send_segment(session, segment, segment, img_seg)
 
-        self.logger.debug(f"last segment = {segment}")
+        logging.debug(f"last segment = {segment}")
 
 
     async def add_read_write_char(self, uuid, value):

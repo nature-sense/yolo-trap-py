@@ -1,9 +1,6 @@
-import asyncio
-import logging
-
-from control.bluetooth_messages import NewSessionMessage, DeleteSessionMessage, SessionDetailsMessage
-from control.publishers.publisher import Publisher
-from control.uuids import SESSION_NOTIF_UUID, SERVICE_UUID
+from control_process.bluetooth_messages import NewSessionMessage, DeleteSessionMessage, SessionDetailsMessage
+from control_process.publishers.publisher import Publisher
+from control_process.uuids import SESSION_NOTIF_UUID, SERVICE_UUID
 
 class SessionPublisher(Publisher) :
     def __init__(self, bluetooth_server):

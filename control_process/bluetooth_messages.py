@@ -1,7 +1,8 @@
 from enum import Enum
 
-from control import bluetooth_pb2
-from session.detection_metadata import DetectionMetadata
+from control_process import bluetooth_pb2
+from ipc.active_flow import ActiveFlow
+from ipc.detection_metadata import DetectionMetadata
 from settings.settings import Settings
 
 
@@ -20,11 +21,6 @@ class FrameMsgType(Enum) :
     FRAME_HEADER = 1
     FRAME_SEGMENT = 2
     UNKNOWN = 3
-
-class ActiveFlow(Enum) :
-    NO_FLOW = 0
-    DETECT_FLOW = 1
-    PREVIEW_FLOW = 2
 
 # ========================================================================
 #                    Session Messages
@@ -273,12 +269,12 @@ class StorageMessage:
 class StateMessage:
     def __init__(self, active_flow : ActiveFlow, storage_mounted) :
 
-        self.active_flow = active_flow.value
+        self.active_flow = active_flow
         self.storage_mounted = storage_mounted
 
     def to_proto(self):
         state_msg =  bluetooth_pb2.StateMsg()
-        state_msg.active_flow = self.active_flow
+        state_msg.active_flow = self.active_flow.value
         state_msg.storage_mounted = self.storage_mounted
         return state_msg.SerializeToString()
 

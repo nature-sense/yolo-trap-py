@@ -1,4 +1,5 @@
 from settings.network_manager import get_wifi_state, get_wifi_ssid
+from settings.settings import Settings
 from settings.settings_database import SettingsDatabase
 
 class SettingsManager :
@@ -11,4 +12,5 @@ class SettingsManager :
                 wifi_ssid = get_wifi_ssid()
 
 
-    
+    def get_settings(self) :
+        return Settings("","", "",True,5,0.5)

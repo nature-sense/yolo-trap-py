@@ -1,5 +1,5 @@
-from session.session_ipc import SessionIpcClient
-from session.session_messages import NewSessionMessage, NewDetectionMessage, UpdateDetectionMessage, UpdateDetectionMetaMessage
+from ipc.session_messages import NewSessionMessage, NewDetectionMessage, UpdateDetectionMetaMessage, \
+    UpdateDetectionMessage
 
 
 class FixedSizeMap:
@@ -7,6 +7,10 @@ class FixedSizeMap:
         self.capacity = capacity
         self.map = {}
         self.keys = []
+
+    def clear(self):
+        self.map.clear()
+        self.keys.clear()
 
     def add(self, key, entry):
         if len(self.map) >= self.capacity:
@@ -32,33 +36,33 @@ class FixedSizeMap:
     def __len__(self):
         return len(self.map)
 
-class DetectionSessionClient:
-    def __init__(self, size, session):
-        self.session = session
+class DetectionsCache:
+    def __init__(self, size, ipc_client):
         self.cache = FixedSizeMap(size)
-        self.ipc = SessionIpcClient()
+        self.ipc = ipc_client
 
-        # Send the NEW_SESSION message
-        msg = NewSessionMessage(self.session).to_proto()
-        self.ipc.send(msg)
+    async def new_session(self, session):
+        self.cache.clear()
+        msg = NewSessionMessage(session).to_proto()
+        await self.ipc.send(msg)
 
     def get_detection_metadata(self, detection):
         return self.cache.get(detection)
 
-    def new_detection(self, detection_metadata, image):
+    async def new_detection(self, detection_metadata, image):
         self.cache.add(detection_metadata.detection, detection_metadata)
         msg = NewDetectionMessage.from_detection_metadata(detection_metadata, image).to_proto()
-        self.ipc.send(msg)
+        await self.ipc.send(msg)
 
-    def update_detection_meta(self, detection_metadata):
+    async def update_detection_meta(self, detection_metadata):
         self.cache.update(detection_metadata.detection, detection_metadata)
         msg = UpdateDetectionMetaMessage.from_detection_metadata(detection_metadata).to_proto()
-        self.ipc.send(msg)
+        await self.ipc.send(msg)
 
-    def update_detection(self, detection_metadata, image):
+    async def update_detection(self, detection_metadata, image):
         self.cache.update(detection_metadata.detection, detection_metadata)
         msg = UpdateDetectionMessage.from_detection_metadata(detection_metadata, image).to_proto()
-        self.ipc.send(msg)
+        await self.ipc.send(msg)
 
 
 

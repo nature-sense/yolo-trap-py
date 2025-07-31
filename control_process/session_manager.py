@@ -13,19 +13,18 @@ __copyright__ = "Copyright 2025, NatureSense"
 
 import json
 import os
-
-import asyncio
-import sys
-
 import cv2
 
 import picologging as logging
+
 from strong_typing.serialization import json_to_object
 from strong_typing.serializer import object_to_json
 
-from session.detection_metadata import DetectionMetadata
-from session.session_ipc import SessionIpcServer
-from session.session_messages import SessionMessage, MsgType
+from control_process.bluetooth_controller import BluetoothController
+from ipc.active_flow import ActiveFlow
+from ipc.detection_metadata import DetectionMetadata
+from ipc.ipc import IpcServer
+from ipc.session_messages import SessionMessage, MsgType
 
 STORAGE_DIRECTORY = "/media/usb1"
 SESSIONS_DIRECTORY = STORAGE_DIRECTORY +"/sessions"
@@ -67,37 +66,38 @@ class SessionCache:
     def get_detections_for_session(self, session):
         return self.sessions.get(session)
 
-class SessionService:
-    def __init__(self, max_sessions, control_service):
+class SessionManager:
+    def __init__(self, settings_manager): #, control_service):
         logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger(name=__name__)
         self.session_cache = SessionCache()
-        self.ipc_server = SessionIpcServer(self)
-        self.max_sessions = max_sessions
-        self.control_service = control_service
+        
+        self.ipc_server = IpcServer(self)
+        self.bluetooth_controller = BluetoothController(self, self.ipc_server)
+        
+        self.max_sessions = settings_manager.get_settings().max_sessions
+        #self.control_service = control_service
 
         self.current_session = None
         self.session_dir = None
         self.image_dir = None
         self.metadata_dir = None
 
-        self.check_storage()
+        #self.check_storage()
 
-    async def start_service(self)  :
-        asyncio.create_task(self.ipc_server.server_task())
 
     def check_storage(self):
-        self.logger.debug("Checking storage")
+        logging.debug("Checking storage")
 
         if os.path.exists(STORAGE_DIRECTORY) :
             if not os.path.exists(SESSIONS_DIRECTORY):
                 os.makedirs(SESSIONS_DIRECTORY)
             self.build_cache()
-            self.logger.debug("Storage found")
-            self.control_service.state_controller.set_storage_state(True)
+            logging.debug("Storage found")
+            self.bluetooth_controller.state_controller.set_storage_state(True)
         else:
-            self.logger.debug("No storage found")
-            self.control_service.state_controller.set_storage_state(False)
+            logging.debug("No storage found")
+            self.bluetooth_controller.state_controller.set_storage_state(False)
 
     def build_cache(self):
         """
@@ -109,11 +109,11 @@ class SessionService:
         self.logger.debug("Rebuilding sessions cache....")
         sessions = sorted(os.listdir(SESSIONS_DIRECTORY))
         for session in sessions:
-            self.logger.debug("Found session %s", session)
+            logging.debug(f"Found {session}")
             self.session_cache.new_session(session)
             detections = self._get_detections_metadata_for_session(session)
             for detection in detections:
-                self.logger.debug("Found image %d", detection.detection)
+                logging.debug(f"Found image {detection.detection}")
                 self.session_cache.new_detection(session, detection)
 
     async def handle_message(self, proto):
@@ -127,10 +127,11 @@ class SessionService:
                UPDATE_DETECTION_META
                UPDATE_DETECTION
                PREVIEW_FRAME
+
         """
 
         type, msg = SessionMessage.from_proto(proto)
-        print(f"Got message {type}", file=sys.stderr)
+        logging.debug(f"Got message {type}")
 
         # ==================================================================
         # NEW_SESSION
@@ -141,7 +142,7 @@ class SessionService:
         # ==================================================================
 
         if type == MsgType.NEW_SESSION :
-            print("Received NEW_SESSION", file=sys.stderr)
+            logging.debug("Received NEW_SESSION")
 
             # Create the directories and an entry in the cache
             self.current_session = msg.session
@@ -154,7 +155,7 @@ class SessionService:
             os.mkdir(self.metadata_dir)
 
             self.session_cache.new_session(msg.session)
-            await self.control_service.session_notifier.notify_new_session(self.current_session)
+            await self.bluetooth_controller.session_notifier.notify_new_session(self.current_session)
             await self._clean_up_sessions()
 
         # ==================================================================
@@ -164,7 +165,7 @@ class SessionService:
         # 3. Update the session cache by adding the detection to the session
         # ==================================================================
         elif type == MsgType.NEW_DETECTION :
-            print("**** Received NEW_DETECTION ****", file=sys.stderr)
+            logging.debug("**** Received NEW_DETECTION ****")
 
             metadata = DetectionMetadata(
                 self.current_session,
@@ -186,11 +187,11 @@ class SessionService:
                 file.write(msg.img_data)
 
             self.session_cache.new_detection(self.current_session, metadata)
-            await self.control_service.session_notifier.notify_session_details(
+            await self.bluetooth_controller.session_notifier.notify_session_details(
                 self.current_session,
                 self.session_cache.count_detections(self.current_session)
             )
-            await self.control_service.detection_notifier.notify_detection_meta(metadata)
+            await self.bluetooth_controller.detection_notifier.notify_detection_meta(metadata)
 
         # ==================================================================
         # UPDATE_DETECTION_META
@@ -207,7 +208,7 @@ class SessionService:
                     try :
                         file.write(json.dumps(object_to_json(meta)))
                     except :
-                        self.logger.debug("Failed to save metadata")
+                        logging.debug("Failed to save metadata")
 
         # ==================================================================
         # UPDATE_DETECTION
@@ -231,21 +232,28 @@ class SessionService:
                 try:
                     cv2.imwrite(f"{self.image_dir}/{msg.detection}.jpg", msg.img_data)
                 except:
-                    self.logger.debug("Failed to save image")
+                    logging.debug("Failed to save image")
 
         # ==================================================================
         # PREVIEW_FRAME
         # ==================================================================
         elif type == MsgType.STREAM_FRAME :
-            self.logger.debug("Got frame - sending it to image streamer")
-            await self.control_service.image_streamer.addFrame(msg.timestamp, msg.frame)
+            logging.debug("Got frame - sending it to image streamer")
+            await self.bluetooth_controller.image_streamer.addFrame(msg.timestamp, msg.frame)
 
         # ==================================================================
         # STORAGE
         # ==================================================================
         elif type == MsgType.STORAGE :
-            self.logger.debug(f"Storage message - state = {msg.mounted}")
-            self.control_service.state_controller.set_storage_state(msg.mounted)
+            logging.debug(f"Storage message - state = {msg.mounted}")
+            self.bluetooth_controller.state_controller.set_storage_state(msg.mounted)
+
+        # ==================================================================
+        # STORAGE
+        # ==================================================================
+        elif type == MsgType.ACTIVE_FLOW :
+            logging.debug(f"Flow state message flow = ${ActiveFlow(msg.flow)}")
+            self.bluetooth_controller.state_controller.set_active_flow(ActiveFlow(msg.flow))
 
         # Ignore unknown
         else :
@@ -260,7 +268,7 @@ class SessionService:
     async def _clean_up_sessions(self):
         sessions = sorted(os.listdir(SESSIONS_DIRECTORY))
         num_sessions = len(sessions)
-        print(f"num sesions {num_sessions} max sessions {self.max_sessions}")
+        logging.debug(f"num sesions {num_sessions} max sessions {self.max_sessions}")
         if num_sessions >= self.max_sessions:
             for idx in range(0, num_sessions-self.max_sessions+1):
                 sess_path = f"{SESSIONS_DIRECTORY}/{sessions[idx]}"
@@ -270,21 +278,21 @@ class SessionService:
                 self._delete_session_files(meta_path)
                 os.rmdir(sess_path)
                 self.session_cache.delete_session(sessions[idx])
-                await self.control_service.session_notifier.notify_delete_session(sessions[idx])
+                await self.bluetooth_controller.session_notifier.notify_delete_session(sessions[idx])
 
     def _delete_session_files(self, dir_path):
         print(dir_path)
         if not os.path.exists(dir_path):
-            print(f"Directory not found: {dir_path}")
+            logging.debug(f"Directory not found: {dir_path}")
             return
 
         for filename in os.listdir(dir_path):
             file_path = os.path.join(dir_path, filename)
             try:
-                print("Deleting file", file_path)
+                logging.debug("Deleting file", file_path)
                 os.remove(file_path)
             except Exception as e:
-                print(f"Error deleting {file_path}: {e}")
+                logging.debug(f"Error deleting {file_path}: {e}")
         os.rmdir(dir_path)
 
 
@@ -304,10 +312,10 @@ class SessionService:
         image_path = f"{SESSIONS_DIRECTORY}/{session}/images"
         metadata_path = f"{SESSIONS_DIRECTORY}/{session}/metadata"
         if not os.path.exists(image_path):
-            print(f"Directory not found: {image_path}")
+            logging.debug(f"Directory not found: {image_path}")
             return []
         if not os.path.exists(metadata_path):
-            print(f"Directory not found: {metadata_path}")
+            logging.debug(f"Directory not found: {metadata_path}")
             return []
         # Get the list of image files with the file extension removed
         return map(lambda img : img.split(".")[0],sorted(os.listdir(image_path)))
