@@ -39,8 +39,11 @@ class DetectFlow(CameraFlow):
         print("model = ", (end_model - start_model) * 1000)
         return results
 
-    def init_camera(self):
+    async def init_camera(self):
         logging.debug("FLOW TASK")
+        msg = ActiveFlowMessage(ActiveFlow.DETECT_FLOW).to_proto()
+        await self.ipc_client.send(msg)
+
         self.picam2 = Picamera2()
         camera_config = self.picam2.create_preview_configuration(
             main={'format': 'RGB888', 'size': MAIN_SIZE},
@@ -67,16 +70,12 @@ class DetectFlow(CameraFlow):
         self.picam2.close()
 
     async def start_flow(self):
-        try:
-            logging.debug("Start flow")
+        logging.debug("Start flow")
 
-            now = datetime.now()
-            self.current_session = now.strftime("%Y%d%m%H%M%S")
-            await self.detections_cache.new_session(self.current_session)
-            msg = ActiveFlowMessage(ActiveFlow.DETECT_FLOW).to_proto()
-            await self.ipc_client.send(msg)
-        except Exception as e:
-            logging.error(f"Error sending flow message: {e}")
+        now = datetime.now()
+        self.current_session = now.strftime("%Y%d%m%H%M%S")
+        await self.detections_cache.new_session(self.current_session)
+
 
     async def process_result(self, result):
 

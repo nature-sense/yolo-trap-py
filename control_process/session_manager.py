@@ -289,7 +289,7 @@ class SessionManager:
         for filename in os.listdir(dir_path):
             file_path = os.path.join(dir_path, filename)
             try:
-                logging.debug("Deleting file", file_path)
+                logging.debug(f"Deleting file {file_path}")
                 os.remove(file_path)
             except Exception as e:
                 logging.debug(f"Error deleting {file_path}: {e}")

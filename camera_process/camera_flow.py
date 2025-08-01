@@ -24,7 +24,7 @@ class CameraFlow(ABC):
         self.exit = True
 
     @abstractmethod
-    def init_camera(self):
+    async def init_camera(self):
         pass
 
     @abstractmethod
@@ -56,7 +56,7 @@ class CameraFlow(ABC):
 
     async def do_flow(self) :
         try :
-            self.init_camera()
+            await self.init_camera()
             await self.start_flow()
 
             while not self.exit :

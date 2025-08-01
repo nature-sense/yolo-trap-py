@@ -21,8 +21,11 @@ class PreviewFlow(CameraFlow):
     def __init__(self, ipc_client):
         super().__init__(ipc_client)
 
-    def init_camera(self):
+    async def init_camera(self):
         logging.debug("PREVIEW TASK")
+        msg = ActiveFlowMessage(ActiveFlow.PREVIEW_FLOW).to_proto()
+        await self.ipc_client.send(msg)
+
         self.picam2 = Picamera2()
 
         camera_config = self.picam2.create_preview_configuration(
@@ -42,14 +45,7 @@ class PreviewFlow(CameraFlow):
             retry += 1
 
     async def start_flow(self):
-        logging.debug("Start flow")
-        msg = ActiveFlowMessage(ActiveFlow.PREVIEW_FLOW).to_proto()
-        logging.debug("Sending active flow message")
-        try :
-            await self.ipc_client.send(msg)
-            logging.debug("Sent active flow message")
-        except Exception as e:
-            logging.error(f"Error sending flow message: {e}")
+        pass
 
 
     async def process_result(self, result):
