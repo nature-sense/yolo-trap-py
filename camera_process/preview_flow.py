@@ -26,7 +26,6 @@ class PreviewFlow(CameraFlow):
         msg = ActiveFlowMessage(ActiveFlow.PREVIEW_FLOW).to_proto()
         await self.ipc_client.send(msg)
 
-        self.picam2 = Picamera2()
 
         camera_config = self.picam2.create_preview_configuration(
             main={'format': 'RGB888', 'size': PREVIEW_SIZE },
