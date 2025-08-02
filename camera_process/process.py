@@ -1,7 +1,6 @@
 import asyncio
 import logging
 
-from camera_process.camera_picam3 import CameraPicam3
 from camera_process.detect_flow import DetectFlow
 from camera_process.preview_flow import PreviewFlow
 from ipc.active_flow import ActiveFlow
@@ -13,12 +12,6 @@ class FlowDescriptor:
     def __init__(self, flow_object, task):
         self.object = flow_object
         self.task = task
-
-def run_camera_process() :
-    logging.debug("Starting camera process")
-    cp = CameraProcess()
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(cp.start_services())
 
 class CameraProcess(MessageHandler):
     def __init__(self, camera):
