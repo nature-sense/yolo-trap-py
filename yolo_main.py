@@ -1,8 +1,12 @@
 import asyncio
+import configparser
 import logging
+import os
 
 from aiomultiprocess import Process, Pool
 
+from camera_process.camera_ahq import CameraAhq
+from camera_process.camera_picam3 import CameraPicam3
 from camera_process.process import CameraProcess
 from control_process.process import ControlProcess
 
@@ -12,9 +16,21 @@ def setup_logging(level=logging.DEBUG):
 async def main() :
     logger = logging.getLogger()
 
+    camera_name = "picamera3"
+    camera = CameraPicam3()
+
+    config = configparser.ConfigParser()
+    if os.path.exists('config.ini') :
+        config.read('config.ini')
+        camera_name = config["trap"]["camera"]
+
+    if camera_name == "arducam-hq" :
+        camera = CameraAhq()
+
+    print(f"Camera {camera_name}")
     control_process = Process(target=ControlProcess().start_services, initializer=setup_logging)
     control_process.start()
-    camera_process = Process(target=CameraProcess().start_services, initializer=setup_logging)
+    camera_process = Process(target=CameraProcess(camera).start_services, initializer=setup_logging)
     camera_process.start()
     await control_process.join()
     await camera_process.join()

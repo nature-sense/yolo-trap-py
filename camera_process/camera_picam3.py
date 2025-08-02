@@ -1,8 +1,5 @@
 import logging
-from abc import ABC, abstractmethod
-
 from libcamera import controls
-from picamera2 import Picamera2
 
 from camera_process.camera import Camera
 

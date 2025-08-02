@@ -21,11 +21,11 @@ def run_camera_process() :
     loop.run_until_complete(cp.start_services())
 
 class CameraProcess(MessageHandler):
-    def __init__(self):
+    def __init__(self, camera):
         self.ipc = None
         self.detect_flow = None
         self.preview_flow = None
-        self.camera = CameraPicam3()
+        self.camera = camera
     async def start_services(self):
         logging.debug("Starting camera services")
         self.ipc = IpcClient(self)
