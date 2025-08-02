@@ -14,7 +14,7 @@ python -m venv  --system-site-packages .venv
 source .venv/bin/activate
 echo 'source .venv/bin/activate' >> .profile
 echo 'dtoverlay=imx477,cam1' | sudo tee -a /boot/firmware/config.txt
-sudo sed '/camera_auto_detect/s/1/0/'  /boot/firmware/config.txt 
+sudo sed '/camera_auto_detect/s/1/0/'  /boot/firmware/config.txt
 
 
 pip install asyncio

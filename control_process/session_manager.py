@@ -13,6 +13,8 @@ __copyright__ = "Copyright 2025, NatureSense"
 
 import json
 import os
+from datetime import datetime
+
 import cv2
 
 import picologging as logging
@@ -28,6 +30,10 @@ from ipc.session_messages import SessionMessage, MsgType
 
 STORAGE_DIRECTORY = "/media/usb1"
 SESSIONS_DIRECTORY = STORAGE_DIRECTORY +"/sessions"
+
+session_format = "%Y%m%d$H%M%S"
+def session_to_datetime(session) :
+    return datetime.strptime(session,session_format)
 
 class SessionCache:
     def __init__(self) :
@@ -154,9 +160,14 @@ class SessionManager:
             os.mkdir(self.image_dir)
             os.mkdir(self.metadata_dir)
 
+            logging.debug("Created directories")
+
             self.session_cache.new_session(msg.session)
             await self.bluetooth_controller.session_notifier.notify_new_session(self.current_session)
             await self._clean_up_sessions()
+
+            logging.debug("New session complete")
+
 
         # ==================================================================
         # NEW_DETECTION
@@ -266,11 +277,14 @@ class SessionManager:
         return self.session_cache.get_detections_for_session(session)
 
     async def _clean_up_sessions(self):
-        sessions = sorted(os.listdir(SESSIONS_DIRECTORY))
+        session_files = os.listdir(SESSIONS_DIRECTORY)
+        sessions = sorted(session_files)
         num_sessions = len(sessions)
-        logging.debug(f"num sesions {num_sessions} max sessions {self.max_sessions}")
+        logging.debug(f"num sessions {num_sessions} max sessions {self.max_sessions}")
         if num_sessions >= self.max_sessions:
-            for idx in range(0, num_sessions-self.max_sessions+1):
+            #for idx in range(0, num_sessions-self.max_sessions+1):
+            for idx in range(0, num_sessions - self.max_sessions+1):
+
                 sess_path = f"{SESSIONS_DIRECTORY}/{sessions[idx]}"
                 img_path = f"{sess_path}/images"
                 self._delete_session_files(img_path)

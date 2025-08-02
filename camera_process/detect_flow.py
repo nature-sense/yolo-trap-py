@@ -24,8 +24,8 @@ class DetectFlow(CameraFlow):
 
     name = "detect_flow"
 
-    def __init__(self, ipc_client):
-        super().__init__(ipc_client)
+    def __init__(self, ipc_client, camera):
+        super().__init__(ipc_client, camera)
 
         #os.environ['LIBCAMERA_LOG_LEVELS'] = '4'
         self.model = YOLO(NCNN_MODEL,task="detect")
@@ -50,20 +50,7 @@ class DetectFlow(CameraFlow):
             lores={'format': 'RGB888', 'size': LORES_SIZE}
         )
 
-        self.picam2.configure(camera_config)
-        self.picam2.set_controls({"AfMode": controls.AfModeEnum.Continuous})
-        self.picam2.video_configuration.controls.FrameRate = 10.0
-
-        #self.picam2.set_controls({"AfRange": controls.AfRangeEnum.Macro})
-        #self.picam2.set_controls({"AfMode": controls.AfModeEnum.Manual, "LensPosition": 0})  # 2.0})
-        self.picam2.start(camera_config)
-        success = False
-        retry = 0
-        while not success and retry < 10:
-            success = self.picam2.autofocus_cycle()
-            logging.debug(f"autofocus result {success}")
-            retry += 1
-
+        self.camera.setup(self.picam2, camera_config)
 
     async def close_camera(self):
         self.picam2.stop()
@@ -73,7 +60,7 @@ class DetectFlow(CameraFlow):
         logging.debug("Start flow")
 
         now = datetime.now()
-        self.current_session = now.strftime("%Y%d%m%H%M%S")
+        self.current_session = now.strftime("%Y%m%d%H%M%S")
         await self.detections_cache.new_session(self.current_session)
 
 

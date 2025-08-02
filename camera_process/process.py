@@ -1,6 +1,7 @@
 import asyncio
 import logging
 
+from camera_process.camera_picam3 import CameraPicam3
 from camera_process.detect_flow import DetectFlow
 from camera_process.preview_flow import PreviewFlow
 from ipc.active_flow import ActiveFlow
@@ -24,12 +25,12 @@ class CameraProcess(MessageHandler):
         self.ipc = None
         self.detect_flow = None
         self.preview_flow = None
-
+        self.camera = CameraPicam3()
     async def start_services(self):
         logging.debug("Starting camera services")
         self.ipc = IpcClient(self)
-        self.detect_flow = FlowDescriptor(DetectFlow(self.ipc), None)
-        self.preview_flow = FlowDescriptor(PreviewFlow(self.ipc), None)
+        self.detect_flow = FlowDescriptor(DetectFlow(self.ipc, self.camera), None)
+        self.preview_flow = FlowDescriptor(PreviewFlow(self.ipc, self.camera), None)
         await asyncio.gather(self.ipc.receiver_task())
 
     def handle_message(self, proto):

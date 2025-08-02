@@ -18,8 +18,8 @@ class PreviewFlow(CameraFlow):
 
     name = "preview_flow"
 
-    def __init__(self, ipc_client):
-        super().__init__(ipc_client)
+    def __init__(self, ipc_client, camera):
+        super().__init__(ipc_client, camera)
 
     async def init_camera(self):
         logging.debug("PREVIEW TASK")
@@ -32,17 +32,7 @@ class PreviewFlow(CameraFlow):
             main={'format': 'RGB888', 'size': PREVIEW_SIZE },
         )
 
-        self.picam2.configure(camera_config)
-        self.picam2.set_controls({"AfMode": controls.AfModeEnum.Continuous})
-        self.picam2.video_configuration.controls.FrameRate = 10.0
-        self.picam2.start(camera_config)
-
-        success = False
-        retry = 0
-        while not success and retry < 10:
-            success = self.picam2.autofocus_cycle()
-            logging.debug(f"autofocus result {success}")
-            retry += 1
+        self.camera.setup(self.picam2, camera_config)
 
     async def start_flow(self):
         pass

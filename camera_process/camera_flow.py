@@ -13,7 +13,8 @@ class CameraFlow(ABC):
 
     name = ""
 
-    def __init__(self, ipc_client):
+    def __init__(self, ipc_client, camera):
+        self.camera = camera
         self.picam2 = None
         self.loop = asyncio.get_running_loop()
         self.ipc_client = ipc_client
@@ -42,7 +43,7 @@ class CameraFlow(ABC):
                 self.loop.call_soon_threadsafe(future.set_exception, e)
             else:
                 self.loop.call_soon_threadsafe(future.set_result, result)
-        self.picam2.capture_request(signal_function=job_done_callback)
+        self.camera.picam2.capture_request(signal_function=job_done_callback)
         return await future
 
 
