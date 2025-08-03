@@ -1,6 +1,6 @@
 import socket
 
-from session.session_messages import StorageMessage
+from ipc.session_messages import StorageMessage
 
 IP_ADDRESS = "127.0.0.1"
 PORT = 1337

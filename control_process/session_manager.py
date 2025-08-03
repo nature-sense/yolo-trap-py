@@ -105,8 +105,8 @@ class SessionManager:
             else:
                 logging.debug("No storage found")
                 self.bluetooth_controller.state_controller.set_storage_state(False)
-        except Exception :
-            logging.debug("Error accessing storage")
+        except Exception as e :
+            logging.debug(f"Error accessing storage {e}")
             self.bluetooth_controller.state_controller.set_storage_state(False)
 
     def build_cache(self):
