@@ -77,9 +77,10 @@ class SessionManager:
         logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger(name=__name__)
         self.session_cache = SessionCache()
-        
+
+        self.settings_manager = settings_manager
         self.ipc_server = IpcServer(self)
-        self.bluetooth_controller = BluetoothController(self, self.ipc_server)
+        self.bluetooth_controller = BluetoothController(self, self.settings_manager, self.ipc_server)
         
         self.max_sessions = settings_manager.get_settings().max_sessions
         #self.control_service = control_service
@@ -94,15 +95,18 @@ class SessionManager:
 
     def check_storage(self):
         logging.debug("Checking storage")
-
-        if os.path.exists(STORAGE_DIRECTORY) :
-            if not os.path.exists(SESSIONS_DIRECTORY):
-                os.makedirs(SESSIONS_DIRECTORY)
-            self.build_cache()
-            logging.debug("Storage found")
-            self.bluetooth_controller.state_controller.set_storage_state(True)
-        else:
-            logging.debug("No storage found")
+        try :
+            if os.path.exists(STORAGE_DIRECTORY) :
+                if not os.path.exists(SESSIONS_DIRECTORY):
+                    os.makedirs(SESSIONS_DIRECTORY)
+                self.build_cache()
+                logging.debug("Storage found")
+                self.bluetooth_controller.state_controller.set_storage_state(True)
+            else:
+                logging.debug("No storage found")
+                self.bluetooth_controller.state_controller.set_storage_state(False)
+        except Exception :
+            logging.debug("Error accessing storage")
             self.bluetooth_controller.state_controller.set_storage_state(False)
 
     def build_cache(self):

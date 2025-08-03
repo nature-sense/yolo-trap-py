@@ -14,10 +14,11 @@ class FlowDescriptor:
         self.task = task
 
 class CameraProcess(MessageHandler):
-    def __init__(self, camera):
+    def __init__(self, settings, camera):
         self.ipc = None
         self.detect_flow = None
         self.preview_flow = None
+        self.settings = settings
         self.camera = camera
     async def start_services(self):
         logging.debug("Starting camera services")

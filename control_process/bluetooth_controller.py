@@ -25,7 +25,7 @@ from control_process.publishers.stream_publisher import StreamPublisher
 from control_process.publishers.session_publisher import SessionPublisher
 from control_process.uuids import SERVICE_UUID, SESSION_LIST_REQ_UUID, SESSION_NOTIF_UUID, DETECTIONS_LIST_REQ_UUID, \
     DETECTION_NOTIF_UUID, IMAGE_REQ_UUID, IMAGE_SEGMENT_UUID, PREVIEW_STREAM_UUID, \
-    STATE_NOTIF_UUID, STATE_REQ_UUID, FLOW_SET_UUID, KEEP_ALIVE_UUID
+    STATE_NOTIF_UUID, STATE_REQ_UUID, FLOW_SET_UUID, KEEP_ALIVE_UUID, SETTINGS_UUID
 
 #from control_process.session_manager import SessionManager
 
@@ -42,7 +42,7 @@ MAIN_SIZE = (2028, 1520)
 LORES_SIZE = (320,320)
 
 class BluetoothController:
-    def __init__(self, session_manager, ipc_server) -> None:
+    def __init__(self, session_manager, settings_manager, ipc_server) -> None:
         logging.basicConfig(level=logging.DEBUG)
 
         self.trigger = asyncio.Event()
@@ -53,6 +53,7 @@ class BluetoothController:
         self.image_queue = asyncio.Queue()
 
         self.session_manager = session_manager
+        self.settings_manager = settings_manager
         self.ipc_server = ipc_server
 
         self.bluetooth_server = None
@@ -101,6 +102,7 @@ class BluetoothController:
         await self.add_notif_char(IMAGE_SEGMENT_UUID, bin(0))
 
         await self.add_notif_char(KEEP_ALIVE_UUID, bin(0))
+        await self.add_read_write_char(SETTINGS_UUID, bin(0))
 
         self.state_controller = StateController(self.ipc_server, self.bluetooth_server)
 
@@ -121,8 +123,10 @@ class BluetoothController:
     def read_request(self, characteristic: BlessGATTCharacteristic, **kwargs) -> bytearray:
         print(f"Reading {characteristic.value}")
 
-        #if characteristic.uuid == STATE_REQ_UUID:
-        #    characteristic.value = self.state_controller.get_state_proto()
+        if characteristic.uuid ==  SETTINGS_UUID:
+            characteristic.value = self.settings_manager.get_settings().to_proto()
+            return characteristic.value
+
         return characteristic.value
 
     def write_request(self, characteristic: BlessGATTCharacteristic, value: Any, **kwargs):

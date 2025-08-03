@@ -291,21 +291,21 @@ class SettingsMessage :
         self.min_score = min_score
 
     def to_proto(self):
-        setngs_msg = bluetooth_pb2.SettingsMsg()
-        setngs_msg.trap_name = self.trap_name
-        setngs_msg.eifi_ssid = self.eifi_ssid
-        setngs_msg.wifi_password = self.wifi_password
-        setngs_msg.wifi_enabled = self.wifi_enabled
-        setngs_msg.max_sessions = self.max_sessions
-        setngs_msg.min_score = self.min_score
-        return setngs_msg.SerializeToString()
+        settings_msg = bluetooth_pb2.SettingsMsg()
+        settings_msg.trapname = self.trap_name
+        settings_msg.wifi_ssid = self.eifi_ssid
+        settings_msg.wifi_password = self.wifi_password
+        settings_msg.wifi_enabled = self.wifi_enabled
+        settings_msg.max_sessions = self.max_sessions
+        settings_msg.min_score = self.min_score
+        return settings_msg.SerializeToString()
 
     @staticmethod
     def from_proto(proto):
         msg = bluetooth_pb2.SettingsMsg()
         msg.ParseFromString(proto)
         return Settings(
-            msg.trap_name,
+            msg.trapname,
             msg.eifi_ssid,
             msg.wifi_password,
             msg.wifi_enabled,
