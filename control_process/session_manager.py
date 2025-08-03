@@ -96,7 +96,7 @@ class SessionManager:
     def check_storage(self):
         logging.debug("Checking storage")
         try :
-            if os.path.exists(STORAGE_DIRECTORY) :
+            if os.path.ismount(STORAGE_DIRECTORY) :
                 if not os.path.exists(SESSIONS_DIRECTORY):
                     os.makedirs(SESSIONS_DIRECTORY)
                 self.build_cache()

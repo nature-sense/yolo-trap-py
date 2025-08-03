@@ -1,4 +1,4 @@
-import socket
+import zmq
 
 from ipc.session_messages import StorageMessage
 
@@ -8,10 +8,12 @@ PORT = 1337
 if __name__ == "__main__":
     msg = StorageMessage(False).to_proto()
 
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        try:
-            s.connect((IP_ADDRESS, PORT))
-            s.sendall(msg)
-        except socket.error:
-            pass
+    ctx = zmq.Context()
+    sock = ctx.socket(zmq.PAIR)
+    try :
+        with sock.connect(f"tcp://{IP_ADDRESS}:{PORT}") as s :
+            s.send(msg)
+    except Exception as e:
+        print(e)
+        pass
 
