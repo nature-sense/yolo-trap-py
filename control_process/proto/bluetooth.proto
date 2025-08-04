@@ -30,7 +30,6 @@ message  ImageMsg {
 
 message StateMsg {
     int32 active_flow = 1;
-    bool storage_mounted = 2;
 }
 
 message ImageHeaderMsg {

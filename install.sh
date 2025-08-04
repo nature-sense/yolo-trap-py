@@ -30,14 +30,11 @@ pip install pyzmq
 pip install aiomultiprocess
 pip install pickledb
 
-sudo cp installation-files/usbstick.rules /etc/udev/rules.d/
-sudo cp installation-files/usbstick-handler@.service /lib/systemd/system/
-sudo cp installation-files/cpmount /usr/local/bin/
-sudo cp installation-files/cpumount /usr/local/bin/
 sudo cp installation-files/yolotrap.service /lib/systemd/system/
 sudo systemctl enable yolotrap.service
 
 sudo sed '/bluetoothd/s/bluetoothd/bluetoothd -P battery/'  /etc/systemd/system/dbus-org.bluez.service
+mkdir sessions
 
 sudo reboot
 

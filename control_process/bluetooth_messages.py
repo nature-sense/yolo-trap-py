@@ -267,15 +267,13 @@ class StorageMessage:
         return sto_msg.SerializeToString()
 
 class StateMessage:
-    def __init__(self, active_flow : ActiveFlow, storage_mounted) :
+    def __init__(self, active_flow : ActiveFlow) :
 
         self.active_flow = active_flow
-        self.storage_mounted = storage_mounted
 
     def to_proto(self):
         state_msg =  bluetooth_pb2.StateMsg()
         state_msg.active_flow = self.active_flow.value
-        state_msg.storage_mounted = self.storage_mounted
         return state_msg.SerializeToString()
 
 # ========================================================================

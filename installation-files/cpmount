@@ -1,2 +1,0 @@
-#!/bin/bash
-/usr/bin/pmount --umask 000 --noatime -w --sync $1 usb1

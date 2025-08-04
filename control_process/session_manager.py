@@ -29,8 +29,7 @@ from ipc.detection_metadata import DetectionMetadata
 from ipc.ipc import IpcServer
 from ipc.session_messages import SessionMessage, MsgType
 
-STORAGE_DIRECTORY = "/media/usb1"
-SESSIONS_DIRECTORY = STORAGE_DIRECTORY +"/sessions"
+SESSIONS_DIRECTORY = "./sessions"
 
 session_format = "%Y%m%d$H%M%S"
 def session_to_datetime(session) :
@@ -82,39 +81,13 @@ class SessionManager:
         self.settings_manager = settings_manager
         self.ipc_server = IpcServer(self)
         self.bluetooth_controller = BluetoothController(self, self.settings_manager, self.ipc_server)
-        
         self.max_sessions = settings_manager.get_settings().max_sessions
-        #self.control_service = control_service
+        self.build_cache()
 
         self.current_session = None
         self.session_dir = None
         self.image_dir = None
         self.metadata_dir = None
-        self.storage_mounted = False
-
-        #self.check_storage()
-    async def check_storage_task(self):
-        logging.debug("Checking storage")
-        while True:
-            if os.path.ismount(STORAGE_DIRECTORY) :
-                if not os.path.exists(SESSIONS_DIRECTORY):
-                    os.makedirs(SESSIONS_DIRECTORY)
-                if not self.storage_mounted :
-                    self.storage_mounted = True
-                    self.build_cache()
-                    logging.debug("Storage found")
-                    self.bluetooth_controller.state_controller.set_storage_state(True)
-            elif os.path.exists(SESSIONS_DIRECTORY):
-                if not self.storage_mounted :
-                    self.storage_mounted = True
-                    self.build_cache()
-                    logging.debug("Test Storage found")
-                    self.bluetooth_controller.state_controller.set_storage_state(True)
-            else:
-                if self.storage_mounted :
-                    logging.debug("No storage found")
-                    self.bluetooth_controller.state_controller.set_storage_state(False)
-            await asyncio.sleep(1)
 
     def build_cache(self):
         """
@@ -262,13 +235,6 @@ class SessionManager:
         elif type == MsgType.STREAM_FRAME :
             logging.debug("Got frame - sending it to image streamer")
             await self.bluetooth_controller.image_streamer.addFrame(msg.timestamp, msg.frame)
-
-        # ==================================================================
-        # STORAGE
-        # ==================================================================
-        elif type == MsgType.STORAGE :
-            logging.debug(f"Storage message - state = {msg.mounted}")
-            self.bluetooth_controller.state_controller.set_storage_state(msg.mounted)
 
         # ==================================================================
         # STORAGE
