@@ -132,7 +132,7 @@ class DetectFlow(CameraFlow):
 
                 else:
                     metadata.updated = current_timestamp_ms
-                    await self.detections_cache.update_detection_meta(metadata)
+                    #await self.detections_cache.update_detection_meta(metadata)
 
 
     def scale(self, rect):
