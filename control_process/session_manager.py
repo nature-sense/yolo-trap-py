@@ -11,6 +11,7 @@ __author__ = "Steve"
 __contact__ = "steve@naturesense.io"
 __copyright__ = "Copyright 2025, NatureSense"
 
+import asyncio
 import json
 import os
 from datetime import datetime
@@ -89,25 +90,31 @@ class SessionManager:
         self.session_dir = None
         self.image_dir = None
         self.metadata_dir = None
+        self.storage_mounted = False
 
         #self.check_storage()
-
-
-    def check_storage(self):
+    async def check_storage_task(self):
         logging.debug("Checking storage")
-        try :
+        while True:
             if os.path.ismount(STORAGE_DIRECTORY) :
                 if not os.path.exists(SESSIONS_DIRECTORY):
                     os.makedirs(SESSIONS_DIRECTORY)
-                self.build_cache()
-                logging.debug("Storage found")
-                self.bluetooth_controller.state_controller.set_storage_state(True)
+                if not self.storage_mounted :
+                    self.storage_mounted = True
+                    self.build_cache()
+                    logging.debug("Storage found")
+                    self.bluetooth_controller.state_controller.set_storage_state(True)
+            elif os.path.exists(SESSIONS_DIRECTORY):
+                if not self.storage_mounted :
+                    self.storage_mounted = True
+                    self.build_cache()
+                    logging.debug("Test Storage found")
+                    self.bluetooth_controller.state_controller.set_storage_state(True)
             else:
-                logging.debug("No storage found")
-                self.bluetooth_controller.state_controller.set_storage_state(False)
-        except Exception as e :
-            logging.debug(f"Error accessing storage {e}")
-            self.bluetooth_controller.state_controller.set_storage_state(False)
+                if self.storage_mounted :
+                    logging.debug("No storage found")
+                    self.bluetooth_controller.state_controller.set_storage_state(False)
+            await asyncio.sleep(1)
 
     def build_cache(self):
         """

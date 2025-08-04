@@ -69,6 +69,7 @@ class BluetoothController:
 
 
     async def bluetooth_task(self):
+        logging.debug("Starting bluetooth task")
         self.trigger.clear()
 
         # Instantiate the server
@@ -114,8 +115,8 @@ class BluetoothController:
 
         task = asyncio.create_task(self.keep_alive_task())
         self.background_tasks.add(task)
-
-        self.session_manager.check_storage()
+        task = asyncio.create_task(self.session_manager.check_storage_task())
+        self.background_tasks.add(task)
 
         logging.debug("Advertising")
         await self.trigger.wait()
