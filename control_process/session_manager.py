@@ -328,8 +328,12 @@ class SessionManager:
         for file in files:
             file_path = f"{metadata_path}/{file}"
             m_fd = os.open(file_path, os.O_RDONLY)
-            json_str = os.read(m_fd, os.path.getsize(file_path)).decode("utf-8")
-            metadata_list.append(json_to_object(DetectionMetadata, json.loads(json_str)))
+            try :
+                json_str = os.read(m_fd, os.path.getsize(file_path)).decode("utf-8")
+                metadata_list.append(json_to_object(DetectionMetadata, json.loads(json_str)))
+            except Exception as e :
+                logging.error(f"Error reading metadate file {file_path}: {e}")
+
         return metadata_list
 
 
