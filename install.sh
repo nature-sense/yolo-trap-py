@@ -28,13 +28,15 @@ pip install lap
 pip install gpiozero
 pip install pyzmq
 pip install aiomultiprocess
-pip install pickledb
 
 sudo cp installation-files/yolotrap.service /lib/systemd/system/
 sudo systemctl enable yolotrap.service
 
 sudo sed '/bluetoothd/s/bluetoothd/bluetoothd -P battery/'  /etc/systemd/system/dbus-org.bluez.service
 mkdir sessions
+mkdir configuration
+echo "[trap]" >> configuration/config.ini
+echo "camera=picamera3" >> configuration/config.ini
 
 sudo reboot
 

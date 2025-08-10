@@ -20,11 +20,12 @@ class CameraProcess(MessageHandler):
         self.preview_flow = None
         self.settings = settings
         self.camera = camera
+
     async def start_services(self):
         logging.debug("Starting camera services")
         self.ipc = IpcClient(self)
-        self.detect_flow = FlowDescriptor(DetectFlow(self.ipc, self.camera), None)
-        self.preview_flow = FlowDescriptor(PreviewFlow(self.ipc, self.camera), None)
+        self.detect_flow = FlowDescriptor(DetectFlow(self.ipc, self.camera, self.settings), None)
+        self.preview_flow = FlowDescriptor(PreviewFlow(self.ipc, self.camera, self.settings), None)
         await asyncio.gather(self.ipc.receiver_task())
 
     def handle_message(self, proto):

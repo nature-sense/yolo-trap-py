@@ -13,8 +13,10 @@ class CameraFlow(ABC):
 
     name = ""
 
-    def __init__(self, ipc_client, camera):
+    def __init__(self, ipc_client, camera, settings):
         self.camera = camera
+        self.settings = settings
+        self.min_score = 0
         self.picam2 = None
         self.loop = asyncio.get_running_loop()
         self.ipc_client = ipc_client

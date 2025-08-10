@@ -22,8 +22,8 @@ async def main() :
     camera = CameraPicam3()
 
     config = configparser.ConfigParser()
-    if os.path.exists('config.ini') :
-        config.read('config.ini')
+    if os.path.exists('settings/config.ini') :
+        config.read('settings/config.ini')
         camera_name = config["trap"]["camera"]
 
     if camera_name == "arducam-hq" :

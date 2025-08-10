@@ -1,16 +1,28 @@
-from control_process.bluetooth_messages import SettingsMessage
-from settings.network_manager import get_wifi_state, get_wifi_ssid
+from settings.settings import Settings
 from settings.settings_database import SettingsDatabase
+
+
 
 class SettingsManager :
     def __init__(self,):
-        self.database  = SettingsDatabase()
-        self.settings = self.database.get_settings()
+        self.database  = SettingsDatabase("configuration/settings.db")
+        self.settings = self.database.read_settings()
         if self.settings is None:
-            wifi_state = get_wifi_state()
-            if wifi_state :
-                wifi_ssid = get_wifi_ssid()
+            self.settings = Settings(
+                "", #trap_name
+                "", #eifi_ssid,
+                "", #wifi_password,
+                True, #wifi_enabled,
+                5, #max_sessions,
+                0.75 #min_score
+            )
+            self.set_settings(self.settings)
 
 
     def get_settings(self) :
-        return SettingsMessage("","", "",True,5,0.5)
+        return self.settings
+
+    def set_settings(self, settings):
+        self.settings = settings
+        self.database.write_settings(self.settings)
+

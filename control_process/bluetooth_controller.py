@@ -14,7 +14,7 @@ from bless import (
 
 from control_process.bluetooth_messages import (
     DetectionReferenceMessage,
-    DetectionsForSessionMessage
+    DetectionsForSessionMessage, SettingsMessage
 )
 from control_process.state_controller import StateController
 from ipc.active_flow import ActiveFlow
@@ -26,6 +26,7 @@ from control_process.publishers.session_publisher import SessionPublisher
 from control_process.uuids import SERVICE_UUID, SESSION_LIST_REQ_UUID, SESSION_NOTIF_UUID, DETECTIONS_LIST_REQ_UUID, \
     DETECTION_NOTIF_UUID, IMAGE_REQ_UUID, IMAGE_SEGMENT_UUID, PREVIEW_STREAM_UUID, \
     STATE_NOTIF_UUID, STATE_REQ_UUID, FLOW_SET_UUID, KEEP_ALIVE_UUID, SETTINGS_UUID
+from settings.settings import Settings
 
 #from control_process.session_manager import SessionManager
 
@@ -123,7 +124,9 @@ class BluetoothController:
         print(f"Reading {characteristic.value}")
 
         if characteristic.uuid ==  SETTINGS_UUID:
-            characteristic.value = self.settings_manager.get_settings().to_proto()
+            characteristic.value = (SettingsMessage.from_settings(
+                self.settings_manager.get_settings()
+            ).to_proto())
             return characteristic.value
 
         return characteristic.value
@@ -158,6 +161,10 @@ class BluetoothController:
             self.background_tasks.add(task)
             task.add_done_callback(self.background_tasks.discard)
 
+        elif characteristic.uuid == SETTINGS_UUID:
+            settings = SettingsMessage.from_proto(value)
+            logging.debug(f"Save settings")
+            self.settings_manager.set_settings(settings)
 
     async def session_list_task(self):
         logging.debug("Session list")

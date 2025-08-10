@@ -24,8 +24,8 @@ class DetectFlow(CameraFlow):
 
     name = "detect_flow"
 
-    def __init__(self, ipc_client, camera):
-        super().__init__(ipc_client, camera)
+    def __init__(self, ipc_client, camera, settings):
+        super().__init__(ipc_client, camera, settings)
 
         #os.environ['LIBCAMERA_LOG_LEVELS'] = '4'
         self.model = YOLO(NCNN_MODEL,task="detect")
@@ -95,44 +95,47 @@ class DetectFlow(CameraFlow):
 
     async def save_detections(self, frame, detections):
         for box, track_id, score, clazz in detections:
+            min_score = self.settings.get_settings().min_score
+            logging.debug(f"score = {score} min-score = {min_score}")
 
-            scaled_box = self.scale(box)
-            logging.debug(f"scaled-box {scaled_box}")
-            x0, y0, x1, y1 = scaled_box
-            img_width = x1-x0
-            img_height = y1-y0
+            if score >= min_score :
+                scaled_box = self.scale(box)
+                logging.debug(f"scaled-box {scaled_box}")
+                x0, y0, x1, y1 = scaled_box
+                img_width = x1-x0
+                img_height = y1-y0
 
-            metadata = self.detections_cache.get_detection_metadata(track_id)
-            current_datetime = datetime.now()
-            current_timestamp_ms = int(current_datetime.timestamp() * 1000)
+                metadata = self.detections_cache.get_detection_metadata(track_id)
+                current_datetime = datetime.now()
+                current_timestamp_ms = int(current_datetime.timestamp() * 1000)
 
-            if metadata is None:
-                current_metadata = DetectionMetadata(
-                    self.current_session,
-                    track_id,
-                    current_timestamp_ms,
-                    current_timestamp_ms,
-                    score,
-                    clazz,
-                    img_width,
-                    img_height
-                )
-                crop = self.to_jpeg(frame.array[y0:y1, x0:x1])
-                await self.detections_cache.new_detection(current_metadata, crop)
-
-            else :
-                if score > metadata.score :
-                    metadata.score = score
-                    metadata.updated = current_timestamp_ms
-                    metadata.width = img_width
-                    metadata.height = img_height
-
+                if metadata is None:
+                    current_metadata = DetectionMetadata(
+                        self.current_session,
+                        track_id,
+                        current_timestamp_ms,
+                        current_timestamp_ms,
+                        score,
+                        clazz,
+                        img_width,
+                        img_height
+                    )
                     crop = self.to_jpeg(frame.array[y0:y1, x0:x1])
-                    await self.detections_cache.update_detection(metadata, crop)
+                    await self.detections_cache.new_detection(current_metadata, crop)
 
-                else:
-                    metadata.updated = current_timestamp_ms
-                    #await self.detections_cache.update_detection_meta(metadata)
+                else :
+                    if score > metadata.score :
+                        metadata.score = score
+                        metadata.updated = current_timestamp_ms
+                        metadata.width = img_width
+                        metadata.height = img_height
+
+                        crop = self.to_jpeg(frame.array[y0:y1, x0:x1])
+                        await self.detections_cache.update_detection(metadata, crop)
+
+                    else:
+                        metadata.updated = current_timestamp_ms
+                        #await self.detections_cache.update_detection_meta(metadata)
 
 
     def scale(self, rect):

@@ -37,6 +37,9 @@ sudo systemctl enable yolotrap.service
 
 sudo sed '/bluetoothd/s/bluetoothd/bluetoothd -P battery/'  /etc/systemd/system/dbus-org.bluez.service
 mkdir sessions
+mkdir configuration
+echo "[trap]" >> configuration/config.ini
+echo "camera=arducam-hq" >> configuration/config.ini
 
 sudo reboot
 

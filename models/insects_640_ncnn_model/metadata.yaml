@@ -1,4 +1,4 @@
-description: Ultralytics YOLO11n model trained on /Users/steve/datasets/Insect_Detect_detection.v5-insect_detect_raw_4k.yolov11/data.yaml
+description: Ultralytics YOLO11n model trained on /Users/steve/datasets/Insect_Detect_detection.v5-insect_detect_raw_4k.yolov11/configuration.yaml
 author: Ultralytics
 date: '2025-07-24T09:47:09.949080'
 version: 8.3.168

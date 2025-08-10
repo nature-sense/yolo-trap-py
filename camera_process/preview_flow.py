@@ -18,8 +18,8 @@ class PreviewFlow(CameraFlow):
 
     name = "preview_flow"
 
-    def __init__(self, ipc_client, camera):
-        super().__init__(ipc_client, camera)
+    def __init__(self, ipc_client, camera, settings):
+        super().__init__(ipc_client, camera, settings)
 
     async def init_camera(self):
         logging.debug("PREVIEW TASK")

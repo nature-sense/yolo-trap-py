@@ -280,13 +280,24 @@ class StateMessage:
 #                 Settings Messages - send only
 # ========================================================================
 class SettingsMessage :
-    def __init__(self, trap_name, eifi_ssid, wifi_password, wifi_enabled, max_sessions, min_score):
+    def __init__(self, trap_name, wifi_ssid, wifi_password, wifi_enabled, max_sessions, min_score):
         self.trap_name = trap_name
-        self.eifi_ssid = eifi_ssid
+        self.eifi_ssid = wifi_ssid
         self.wifi_password = wifi_password
         self.wifi_enabled = wifi_enabled
         self.max_sessions = max_sessions
         self.min_score = min_score
+
+    @staticmethod
+    def from_settings(settings):
+        return SettingsMessage(
+            settings.trap_name,
+            settings.wifi_ssid,
+            settings.wifi_password,
+            settings.wifi_enabled,
+            settings.max_sessions,
+            settings.min_score
+        )
 
     def to_proto(self):
         settings_msg = bluetooth_pb2.SettingsMsg()
@@ -304,7 +315,7 @@ class SettingsMessage :
         msg.ParseFromString(proto)
         return Settings(
             msg.trapname,
-            msg.eifi_ssid,
+            msg.wifi_ssid,
             msg.wifi_password,
             msg.wifi_enabled,
             msg.max_sessions,

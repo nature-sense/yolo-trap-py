@@ -81,7 +81,6 @@ class SessionManager:
         self.settings_manager = settings_manager
         self.ipc_server = IpcServer(self)
         self.bluetooth_controller = BluetoothController(self, self.settings_manager, self.ipc_server)
-        self.max_sessions = settings_manager.get_settings().max_sessions
         self.build_cache()
 
         self.current_session = None
@@ -191,7 +190,7 @@ class SessionManager:
         # ==================================================================
         # UPDATE_DETECTION_META
         # 1. Update the metadata in the cache
-        # 2. Overwrite the data in the metadata file
+        # 2. Overwrite the configuration in the metadata file
         # ==================================================================
         elif type == MsgType.UPDATE_DETECTION_META :
             meta = self.session_cache.get_detection(self.current_session, msg.detection)
@@ -208,7 +207,7 @@ class SessionManager:
         # ==================================================================
         # UPDATE_DETECTION
         # 1. Update the metadata in the cache
-        # 2. Overwrite the data in the metadata file
+        # 2. Overwrite the configuration in the metadata file
         # 3. Overwrite the image in the image file
         # ==================================================================
         elif type == MsgType.UPDATE_DETECTION :
@@ -254,13 +253,14 @@ class SessionManager:
         return self.session_cache.get_detections_for_session(session)
 
     async def _clean_up_sessions(self):
+        max_sessions = self.settings_manager.get_settings().max_sessions
         session_files = os.listdir(SESSIONS_DIRECTORY)
         sessions = sorted(session_files)
         num_sessions = len(sessions)
-        logging.debug(f"num sessions {num_sessions} max sessions {self.max_sessions}")
-        if num_sessions >= self.max_sessions:
+        logging.debug(f"num sessions {num_sessions} max sessions {max_sessions}")
+        if num_sessions >= max_sessions:
             #for idx in range(0, num_sessions-self.max_sessions+1):
-            for idx in range(0, num_sessions - self.max_sessions+1):
+            for idx in range(0, num_sessions - max_sessions+1):
 
                 sess_path = f"{SESSIONS_DIRECTORY}/{sessions[idx]}"
                 img_path = f"{sess_path}/images"
