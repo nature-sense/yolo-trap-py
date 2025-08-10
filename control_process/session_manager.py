@@ -260,7 +260,7 @@ class SessionManager:
         logging.debug(f"num sessions {num_sessions} max sessions {max_sessions}")
         if num_sessions >= max_sessions:
             #for idx in range(0, num_sessions-self.max_sessions+1):
-            for idx in range(0, num_sessions - max_sessions+1):
+            for idx in range(0, num_sessions - max_sessions):
 
                 sess_path = f"{SESSIONS_DIRECTORY}/{sessions[idx]}"
                 img_path = f"{sess_path}/images"
