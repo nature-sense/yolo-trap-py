@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import time
 import cv2
@@ -12,7 +13,8 @@ from ipc.active_flow import ActiveFlow
 from ipc.session_messages import FrameMessage, ActiveFlowMessage
 
 FRAME_INTERVAL_SECONDS = 2
-PREVIEW_SIZE = (320,240)
+MAIN_SIZE = (2028, 1520)
+LORES_SIZE = (320,240)
 
 class PreviewFlow(CameraFlow):
 
@@ -28,7 +30,8 @@ class PreviewFlow(CameraFlow):
 
         self.picam2 = Picamera2()
         camera_config = self.picam2.create_preview_configuration(
-            main={'format': 'RGB888', 'size': PREVIEW_SIZE },
+            main={'format': 'RGB888', 'size': MAIN_SIZE },
+            lores={'format': 'RGB888', 'size': LORES_SIZE}
         )
 
         self.camera.setup(self.picam2, camera_config)
@@ -42,12 +45,13 @@ class PreviewFlow(CameraFlow):
         current_datetime = datetime.now()
         current_timestamp_ms = int(current_datetime.timestamp() * 1000)
 
-        with MappedArray(result, 'main') as m:
+        with MappedArray(result, 'lores') as m:
             jpg_img = self.to_jpeg(m)
             if jpg_img is not None :
                 await self.stream_to_ipc(current_timestamp_ms, jpg_img)
             result.release()
-            time.sleep(FRAME_INTERVAL_SECONDS)
+            await asyncio.sleep(FRAME_INTERVAL_SECONDS)
+            #time.sleep(FRAME_INTERVAL_SECONDS)
 
     async def close_camera(self):
         self.picam2.stop()

@@ -18,7 +18,6 @@ from ipc.session_messages import ActiveFlowMessage
 NCNN_MODEL = "./models/insects_320_ncnn_model"
 MAIN_SIZE = (2028, 1520)
 LORES_SIZE = (320,320)
-MAX_DETECTIONS = 20
 
 class DetectFlow(CameraFlow):
 
@@ -29,7 +28,7 @@ class DetectFlow(CameraFlow):
 
         #os.environ['LIBCAMERA_LOG_LEVELS'] = '4'
         self.model = YOLO(NCNN_MODEL,task="detect")
-        self.detections_cache = DetectionsCache(MAX_DETECTIONS, self.ipc_client)
+        self.detections_cache = DetectionsCache(50, self.ipc_client)
         self.current_session = None
 
     def do_track(self, array):

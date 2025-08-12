@@ -16,6 +16,7 @@ class IpcServer:
     async def receiver_task(self):
         logging.debug("Starting ipc receiver task")
         self.sock.bind(f"tcp://{IP_ADDRESS}:{PORT}")
+
         while True:
             data = await self.sock.recv()  # waits for msg to be ready
             await self.handler.handle_message(data)
