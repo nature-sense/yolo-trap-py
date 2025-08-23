@@ -5,12 +5,15 @@ import numpy as np
 import cv2
 
 from datetime import datetime
+
+from PIL import Image
+
 from camera_process.camera_flow import CameraFlow
-from libcamera import controls
 from picamera2 import MappedArray, Picamera2
 from ultralytics import YOLO
 
 from camera_process.detections_cache import DetectionsCache
+from camera_process.frame_publisher import FramePublisher
 from ipc.active_flow import ActiveFlow
 from ipc.detection_metadata import DetectionMetadata
 from ipc.session_messages import ActiveFlowMessage
@@ -25,10 +28,11 @@ class DetectFlow(CameraFlow):
 
     def __init__(self, ipc_client, camera, settings):
         super().__init__(ipc_client, camera, settings)
-
         #os.environ['LIBCAMERA_LOG_LEVELS'] = '4'
         self.model = YOLO(NCNN_MODEL,task="detect")
         self.detections_cache = DetectionsCache(50, self.ipc_client)
+        self.frame_publisher = FramePublisher()
+        self.publish_channel = self.frame_publisher.channel
         self.current_session = None
 
     def do_track(self, array):
@@ -84,6 +88,12 @@ class DetectFlow(CameraFlow):
                         track_ids = [tid.item() for tid in results[0].boxes.id.int().cpu().numpy()]
                         scores = [s.item() for s in results[0].boxes.conf.numpy()]
                         classes = [c.item() for c in results[0].boxes.cls.numpy().astype(np.int32)]
+
+                        im_array = results[0].plot()
+                        im = Image.fromarray(im_array[..., ::-1])
+                        #await self.publish_channel.asend(im)
+                        #self.streamer.process.
+                        #im.show()
 
                         await self.save_detections(m, zip(boxes, track_ids, scores, classes))
                     except AttributeError :

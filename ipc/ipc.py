@@ -5,7 +5,7 @@ import zmq
 import zmq.asyncio
 
 IP_ADDRESS = "127.0.0.1"
-PORT = 1936
+PORT = 5376
 
 class IpcServer:
     def __init__(self, handler):

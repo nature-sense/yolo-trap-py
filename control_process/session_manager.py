@@ -12,19 +12,18 @@ __contact__ = "steve@naturesense.io"
 __copyright__ = "Copyright 2025, NatureSense"
 
 import asyncio
-import json
+import logging
 import os
 from datetime import datetime
 
-import cv2
+from aioreactive import AsyncSubject
+from bless import BlessServer
 
-import picologging as logging
+from control_process.sessions_cache import SessionsCache
+from control_process.trap_protocol_server import TrapProtocolServer
 
-from strong_typing.serialization import json_to_object
-from strong_typing.serializer import object_to_json
-
-from control_process.bluetooth_controller import BluetoothController
 from ipc.active_flow import ActiveFlow
+from ipc.control_messages import SetActiveFlowMessage
 from ipc.detection_metadata import DetectionMetadata
 from ipc.ipc import IpcServer
 from ipc.session_messages import SessionMessage, MsgType
@@ -35,75 +34,75 @@ session_format = "%Y%m%d$H%M%S"
 def session_to_datetime(session) :
     return datetime.strptime(session,session_format)
 
-class SessionCache:
-    def __init__(self) :
-        self.sessions = {}
-
-    def new_session(self, session) :
-        self.sessions[session] = {}
-
-    def delete_session(self, session) :
-        del self.sessions[session]
-
-    def new_detection(self, session, detection_metadata) :
-       sess = self.sessions.get(session)
-       if sess is not None :
-           sess[detection_metadata.detection] = detection_metadata
-
-    def count_detections(self, session) :
-        return len(self.sessions.get(session))
-
-    def get_detection(self, session, detection ):
-        sess = self.sessions.get(session)
-        if sess is not None :
-            meta = sess.get(detection)
-            if meta is not None :
-                return meta
-        return None
-
-    def set_detection(self, session, detection_metadata) :
-        sess = self.sessions.get(session)
-        if sess is not None:
-            sess[detection_metadata.detection] = detection_metadata
-
-    def list_sessions(self) :
-        return map(lambda session : (session, len(self.sessions[session])), sorted(self.sessions.keys()))
-
-    def get_detections_for_session(self, session):
-        return self.sessions.get(session)
+SERVICE_UUID  = "213e313b-d0df-4350-8e5d-ae657962bb56"
 
 class SessionManager:
     def __init__(self, settings_manager): #, control_service):
         logging.basicConfig(level=logging.DEBUG)
         self.logger = logging.getLogger(name=__name__)
-        self.session_cache = SessionCache()
+
+        self.node_name = os.uname().nodename.upper()
 
         self.settings_manager = settings_manager
-        self.ipc_server = IpcServer(self)
-        self.bluetooth_controller = BluetoothController(self, self.settings_manager, self.ipc_server)
-        self.build_cache()
+        self.sessions_cache = SessionsCache(SESSIONS_DIRECTORY, self.settings_manager)
 
+        self.state_stream = AsyncSubject()
+
+        self.ipc_server = IpcServer(self)
+        self.protocol_server = TrapProtocolServer(self)
+
+        asyncio.create_task(self.sessions_cache.init()) # run asynchronously
+
+        self.active_flow = ActiveFlow.NO_FLOW
+
+        self.bluetooth_server = None
         self.current_session = None
         self.session_dir = None
         self.image_dir = None
         self.metadata_dir = None
 
-    def build_cache(self):
-        """
-        build_cache()
+    async def bluetooth_task(self):
+        logging.debug("Starting bluetooth task")
 
-        Rebuild the session cache on startup by scanning session directories
-        and reading the image metadata
+        # Instantiate the server
+        loop = asyncio.get_running_loop()
+        self.bluetooth_server = BlessServer(name=self.node_name, loop=loop)
+        await self.bluetooth_server.add_new_service(SERVICE_UUID)
+        await self.bluetooth_server.start()
+        logging.debug("SBluetooth advertising")
+        await asyncio.Future()
+
+    async def handle_requests(self, request):
         """
-        self.logger.debug("Rebuilding sessions cache....")
-        sessions = sorted(os.listdir(SESSIONS_DIRECTORY))
-        for session in sessions:
-            logging.debug(f"Found {session}")
-            self.session_cache.new_session(session)
-            detections = self._get_detections_metadata_for_session(session)
-            for detection in detections:
-                logging.debug(f"Found image {detection.detection}")
-                self.session_cache.new_detection(session, detection)
+            handle_requests()
+
+            handle handle requests received over the web-socket connection
+            Requests are:
+                Subscribe Sessions
+                Subscribe Detections
+                Subscribe State
+                Get Settings
+                """
+        if request is not None :
+            pass
+           # if request is SubscribeSessionsRequest :
+           #     for session in self.sessions_cache.list_sessions() :
+           #         resp = SessionDetailsResponse(session[0], session[1])
+           #         await self.websocket_server.send_response(resp)
+
+
+            #elif request is SubscribeDetectionsRequest :
+
+            #    pass
+
+            #elif request is SubscibeStateRequest :
+            #    pass
+
+            #elif request is GetSettingsRequest :
+            #    settings = self.settings_manager.get_settings()
+            #    resp = SettingsResponse.from_settings(settings).to_proto()
+            #    await self.websocket_server.send_response(resp)
+
 
     async def handle_message(self, proto):
         """
@@ -132,24 +131,8 @@ class SessionManager:
 
         if type == MsgType.NEW_SESSION :
             logging.debug("Received NEW_SESSION")
-
-            # Create the directories and an entry in the cache
             self.current_session = msg.session
-            self.session_dir = f"{SESSIONS_DIRECTORY}/{msg.session}"
-            self.image_dir = f"{self.session_dir}/images"
-            self.metadata_dir = f"{self.session_dir}/metadata"
-
-            os.mkdir(self.session_dir)
-            os.mkdir(self.image_dir)
-            os.mkdir(self.metadata_dir)
-
-            logging.debug("Created directories")
-
-            self.session_cache.new_session(msg.session)
-            await self.bluetooth_controller.session_notifier.notify_new_session(self.current_session)
-            await self._clean_up_sessions()
-
-            logging.debug("New session complete")
+            await self.sessions_cache.new_session(msg.session)
 
 
         # ==================================================================
@@ -171,21 +154,7 @@ class SessionManager:
                 msg.width,
                 msg.height,
             )
-
-            metadata_file = str(f"{self.metadata_dir}/{msg.detection}.json")
-            image_file = str(f"{self.image_dir}/{msg.detection}.jpg")
-
-            with open(metadata_file, 'w') as file:
-                file.write(json.dumps(object_to_json(metadata)))
-            with open(image_file, 'wb') as file:
-                file.write(msg.img_data)
-
-            self.session_cache.new_detection(self.current_session, metadata)
-            await self.bluetooth_controller.session_notifier.notify_session_details(
-                self.current_session,
-                self.session_cache.count_detections(self.current_session)
-            )
-            await self.bluetooth_controller.detection_notifier.notify_detection_meta(metadata)
+            await self.sessions_cache.new_detection(metadata, msg.img_data)
 
         # ==================================================================
         # UPDATE_DETECTION_META
@@ -193,16 +162,7 @@ class SessionManager:
         # 2. Overwrite the configuration in the metadata file
         # ==================================================================
         elif type == MsgType.UPDATE_DETECTION_META :
-            meta = self.session_cache.get_detection(self.current_session, msg.detection)
-            if meta is not None :
-                meta.updated = msg.updated
-                self.session_cache.set_detection(self.current_session, meta)
-                metadata_file = str(f"{self.metadata_dir}/{meta.detection}.json")
-                with open(metadata_file, 'w') as file:
-                    try :
-                        file.write(json.dumps(object_to_json(meta)))
-                    except :
-                        logging.debug("Failed to save metadata")
+            await self.sessions_cache.update_detection_meta(msg.detection, msg.updated)
 
         # ==================================================================
         # UPDATE_DETECTION
@@ -211,125 +171,44 @@ class SessionManager:
         # 3. Overwrite the image in the image file
         # ==================================================================
         elif type == MsgType.UPDATE_DETECTION :
-            meta = self.session_cache.get_detection(self.current_session, msg.detection)
-            if meta is not None:
-                meta.updated = msg.updated
-                meta.score = msg.score
-                meta.width = msg.width
-                meta.height = msg.height
-
-                self.session_cache.set_detection(self.current_session, meta)
-
-                metadata_file = str(f"{self.metadata_dir}/{msg.detection}.json")
-                with open(metadata_file, 'w') as file:
-                    file.write(json.dumps(object_to_json(meta)))
-                try:
-                    cv2.imwrite(f"{self.image_dir}/{msg.detection}.jpg", msg.img_data)
-                except:
-                    logging.debug("Failed to save image")
+            await self.sessions_cache.update_detection(
+                msg.detection,
+                msg.updated,
+                msg.score,
+                msg.width,
+                msg.height,
+                msg.img_data
+            )
 
         # ==================================================================
         # PREVIEW_FRAME
         # ==================================================================
         elif type == MsgType.STREAM_FRAME :
             logging.debug("Got frame - sending it to image streamer")
-            await self.bluetooth_controller.image_streamer.addFrame(msg.timestamp, msg.frame)
+            #await self.bluetooth_controller.image_streamer.addFrame(msg.timestamp, msg.frame)
 
         # ==================================================================
-        # STORAGE
+        # Active Flow
         # ==================================================================
         elif type == MsgType.ACTIVE_FLOW :
-            logging.debug(f"Flow state message flow = ${ActiveFlow(msg.flow)}")
-            self.bluetooth_controller.state_controller.set_active_flow(ActiveFlow(msg.flow))
+            logging.debug(f"Flow state message. flow = {ActiveFlow(msg.flow)}")
+            self.active_flow = ActiveFlow(msg.flow)
+            await self.state_stream.asend(self.active_flow)
 
         # Ignore unknown
         else :
             pass
 
+    async def set_active_flow(self, flow):
+        self.active_flow = flow
+        msg = SetActiveFlowMessage(flow)
+        await self.ipc_server.send(msg.to_proto())
+
+    def get_active_flow(self):
+        return self.active_flow
+
     def list_sessions(self):
-        return self.session_cache.list_sessions()
-
-    def list_detections_for_session(self, session):
-        return self.session_cache.get_detections_for_session(session)
-
-    async def _clean_up_sessions(self):
-        max_sessions = self.settings_manager.get_settings().max_sessions
-        session_files = os.listdir(SESSIONS_DIRECTORY)
-        sessions = sorted(session_files)
-        num_sessions = len(sessions)
-        logging.debug(f"num sessions {num_sessions} max sessions {max_sessions}")
-        if num_sessions >= max_sessions:
-            #for idx in range(0, num_sessions-self.max_sessions+1):
-            for idx in range(0, num_sessions - max_sessions):
-
-                sess_path = f"{SESSIONS_DIRECTORY}/{sessions[idx]}"
-                img_path = f"{sess_path}/images"
-                self._delete_session_files(img_path)
-                meta_path = f"{sess_path}/metadata"
-                self._delete_session_files(meta_path)
-                os.rmdir(sess_path)
-                self.session_cache.delete_session(sessions[idx])
-                await self.bluetooth_controller.session_notifier.notify_delete_session(sessions[idx])
-
-    def _delete_session_files(self, dir_path):
-        print(dir_path)
-        if not os.path.exists(dir_path):
-            logging.debug(f"Directory not found: {dir_path}")
-            return
-
-        for filename in os.listdir(dir_path):
-            file_path = os.path.join(dir_path, filename)
-            try:
-                logging.debug(f"Deleting file {file_path}")
-                os.remove(file_path)
-            except Exception as e:
-                logging.debug(f"Error deleting {file_path}: {e}")
-        os.rmdir(dir_path)
-
-
-    def _get_detections_metadata_for_session(self, session) :
-        metadata_list = []
-        metadata_path = f"{SESSIONS_DIRECTORY}/{session}/metadata"
-        files = sorted(os.listdir(metadata_path))
-        for file in files:
-            file_path = f"{metadata_path}/{file}"
-            m_fd = os.open(file_path, os.O_RDONLY)
-            try :
-                json_str = os.read(m_fd, os.path.getsize(file_path)).decode("utf-8")
-                metadata_list.append(json_to_object(DetectionMetadata, json.loads(json_str)))
-            except Exception as e :
-                logging.error(f"Error reading metadate file {file_path}: {e}")
-
-        return metadata_list
-
-
-    def list_images_for_session(self, session):
-        image_path = f"{SESSIONS_DIRECTORY}/{session}/images"
-        metadata_path = f"{SESSIONS_DIRECTORY}/{session}/metadata"
-        if not os.path.exists(image_path):
-            logging.debug(f"Directory not found: {image_path}")
-            return []
-        if not os.path.exists(metadata_path):
-            logging.debug(f"Directory not found: {metadata_path}")
-            return []
-        # Get the list of image files with the file extension removed
-        return map(lambda img : img.split(".")[0],sorted(os.listdir(image_path)))
-
-    def get_image_data(self, session, image):
-        image_path =   f"{SESSIONS_DIRECTORY}/{session}/images/{image}.jpg"
-        metadata_path = f"{SESSIONS_DIRECTORY}/{session}/metadata/{image}.json"
-        assert(os.path.exists(metadata_path))
-        assert(os.path.exists(image_path))
-
-        m_fd = os.open(metadata_path, os.O_RDONLY)
-        json_str = os.read(m_fd, os.path.getsize(metadata_path)).decode("utf-8")
-        json_map = json.loads(json_str)
-        imd = json_to_object(DetectionMetadata, json_map)
-
-        i_fd = os.open(image_path, os.O_RDONLY)
-        img = os.read(i_fd, os.path.getsize(image_path))
-
-        return imd, img
+        return self.sessions_cache.list_sessions()
 
 
 

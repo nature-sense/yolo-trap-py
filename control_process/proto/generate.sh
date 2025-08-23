@@ -1,1 +1,1 @@
-protoc --python_out=.. bluetooth.proto
+protoc --python_out=.. trap_protocol.proto

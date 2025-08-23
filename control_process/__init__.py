@@ -1,1 +1,1 @@
-__all__ = ["process", "session_manager.py"]
+__all__ = ["process", "session_manager", "trap_protocol_pb2"]

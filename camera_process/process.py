@@ -7,7 +7,6 @@ from ipc.active_flow import ActiveFlow
 from ipc.control_messages import ControlMessage, MsgType
 from ipc.ipc import IpcClient, MessageHandler
 
-
 class FlowDescriptor:
     def __init__(self, flow_object, task):
         self.object = flow_object
@@ -26,7 +25,6 @@ class CameraProcess(MessageHandler):
         self.ipc = IpcClient(self)
         self.detect_flow = FlowDescriptor(DetectFlow(self.ipc, self.camera, self.settings), None)
         self.preview_flow = FlowDescriptor(PreviewFlow(self.ipc, self.camera, self.settings), None)
-        await asyncio.gather(self.ipc.receiver_task())
 
     def handle_message(self, proto):
         type, msg = ControlMessage.from_proto(proto)

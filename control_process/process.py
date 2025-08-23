@@ -12,4 +12,8 @@ class ControlProcess :
         logging.debug("Starting control services")
 
         session_manager = SessionManager(self.settings)
-        await asyncio.gather(session_manager.ipc_server.receiver_task(), session_manager.bluetooth_controller.bluetooth_task())
+        await asyncio.gather(
+            session_manager.ipc_server.receiver_task(),
+            session_manager.protocol_server.server_task(),
+            session_manager.bluetooth_task()
+        )

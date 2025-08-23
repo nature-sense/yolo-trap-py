@@ -5,10 +5,10 @@ sudo apt install -y python3-multiprocess
 sudo apt install -y python3-protobuf
 sudo apt install -y python3-numpy
 sudo apt install -y python3-opencv
-sudo apt install -y autofs
 sudo apt install -y git
-sudo apt install -y pmount
 sudo apt install -y python3-tk
+sudo apt install -y ffmpeg
+
 
 python -m venv  --system-site-packages .venv
 source .venv/bin/activate
@@ -26,8 +26,10 @@ pip install thonny
 pip install numpy==1.26.4
 pip install lap
 pip install gpiozero
-pip install pyzmq
 pip install aiomultiprocess
+pip install aioreactive
+pip install websockets
+pip install asyncudp
 
 sudo cp installation-files/yolotrap.service /lib/systemd/system/
 sudo systemctl enable yolotrap.service
